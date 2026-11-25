@@ -501,8 +501,10 @@
       if (s === "budget") {
         say(`Thanks, ${esc(ans.name.split(" ")[0])}! Roughly what budget and timeline are you working with? No wrong answers, it just helps us plan.`, "3 of 4");
         if (answered) return reply(`${ans.budget} · ${ans.when}`, i);
-        const pane = answer(`<div class="opts" data-g="budget">${Q.budget.map((o) => `<button class="opt" aria-pressed="${ans.budget === o}">${esc(o)}</button>`).join("")}</div>
-          <div class="opts" data-g="when" style="margin-top:6px">${Q.when.map((o) => `<button class="opt" aria-pressed="${ans.when === o}">${esc(o)}</button>`).join("")}</div>
+        const pane = answer(`<p class="opts-label" id="l-budget">Budget</p>
+          <div class="opts" data-g="budget" role="group" aria-labelledby="l-budget">${Q.budget.map((o) => `<button class="opt" aria-pressed="${ans.budget === o}">${esc(o)}</button>`).join("")}</div>
+          <p class="opts-label" id="l-when">Timeline <span class="muted">(when do you need this?)</span></p>
+          <div class="opts" data-g="when" role="group" aria-labelledby="l-when">${Q.when.map((o) => `<button class="opt" aria-pressed="${ans.when === o}">${esc(o)}</button>`).join("")}</div>
           <div class="go-row"><span class="err"></span><button class="btn btn-dark" data-next>Next <span class="arr">→</span></button></div>`);
         $$(".opts", pane).forEach((g) => g.addEventListener("click", (e) => {
           const b = e.target.closest(".opt"); if (!b) return;

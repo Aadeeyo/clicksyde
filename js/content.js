@@ -50,6 +50,25 @@
         D0.layout.home.forEach((b) => { if (!D.layout.home.includes(b)) D.layout.home.push(b); }); // new blocks added in code still show
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
+      if (Array.isArray(site.services)) {
+        const strs = (a, n) => (Array.isArray(a) ? a : []).map((x) => String(x).trim().slice(0, n)).filter(Boolean).slice(0, 12);
+        const seen = new Set();
+        const list = site.services.filter((s) => s && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s.id) && s.t && !seen.has(s.id) && seen.add(s.id)).map((s, i) => ({
+          id: s.id, t: String(s.t).slice(0, 80), s: String(s.s || "").slice(0, 200), body: String(s.body || "").slice(0, 2000),
+          c: isHex(s.c) ? s.c : "#DDE3F6", rot: Math.max(-3, Math.min(3, Number(s.rot) || (i % 2 ? 1.5 : -1.5))), cat: String(s.cat || "show").replace(/\W/g, ""),
+          get: strs(s.get, 160), for: strs(s.for, 80)
+        }));
+        if (list.length) D.services = list;
+      }
+      if (Array.isArray(site.problems)) {
+        const ids = new Set(D.services.map((s) => s.id));
+        D.problems = site.problems.filter((p) => p && p.p && p.h).map((p) => ({
+          p: String(p.p).slice(0, 120), h: String(p.h).slice(0, 40), ids: (Array.isArray(p.ids) ? p.ids : []).filter((id) => ids.has(id))
+        }));
+      } else {
+        const ids = new Set(D.services.map((s) => s.id));
+        D.problems.forEach((p) => { p.ids = p.ids.filter((id) => ids.has(id)); });
+      }
     }
     if (Array.isArray(posts)) {
       D.posts = posts.map((p) => ({

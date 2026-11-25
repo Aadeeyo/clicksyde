@@ -62,6 +62,8 @@
       clients: Array.isArray(d.clients) ? d.clients : clone(D0.clients),
       layout: d.layout && Array.isArray(d.layout.home) ? d.layout : clone(D0.layout),
       theme: d.theme && isHex(d.theme.brand) ? d.theme : { brand: "#FF4306" },
+      services: Array.isArray(d.services) && d.services.length ? d.services : clone(D0.services),
+      problems: Array.isArray(d.problems) ? d.problems : clone(D0.problems),
       postsManaged: !!d.postsManaged
     };
   };
@@ -228,6 +230,7 @@
     ["leads", "Leads", "M4 6h16v12H4zM4 7l8 6 8-6"],
     ["newsletter", "Newsletter", "M5 4h14v16l-7-4-7 4z"],
     ["blog", "Blog", "M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14"],
+    ["services", "Services", "M5 4h14v11l-5 5H5zM14 20v-5h5"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
     ["layout", "Layout & brand", "M4 4h16v5H4zM4 12h7v8H4zM14 12h6v8h-6z"]
@@ -273,6 +276,7 @@
       if (sec === "leads") await leads(arg);
       else if (sec === "newsletter") await newsletter();
       else if (sec === "blog") arg ? await editor(decodeURIComponent(arg)) : await blog();
+      else if (sec === "services") arg ? await serviceEditor(decodeURIComponent(arg)) : await services();
       else if (sec === "clients") await clients();
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
@@ -500,6 +504,102 @@
         location.hash = "#blog/" + encodeURIComponent(p.id);
         if (!isNew) route();
       } catch (err) { fail(err); }
+    };
+    preview();
+  }
+
+  /* ---------- Services (sticky notes on The Wall) ---------- */
+  const NOTE_COLORS = ["#DDE3F6", "#FFE600", "#DDF3E2", "#D8BDF0", "#E3EEF8", "#FDE3EA", "#11C5F0", "#2CB8AD", "#FFB38A", "#F6A8C5"];
+  const lines = (t) => t.split("\n").map((x) => x.trim()).filter(Boolean);
+
+  async function services() {
+    const site = await api.getSite();
+    const list = site.services;
+    const save = async (msg) => {
+      try { await api.saveSite(site); toast(msg); draw(); } catch (err) { fail(err); }
+    };
+    const draw = () => {
+      view().innerHTML = head("Services", "The sticky notes on The Wall, in this order. Visitors tap a note to read the full service.",
+        `${siteLink("services.html")}<a class="btn btn-brand" href="#services/new">New service</a>`) + `
+        <ul class="notes-admin">${list.map((s, i) => {
+          const fixes = site.problems.filter((p) => p.ids.includes(s.id)).map((p) => p.h);
+          return `<li><div class="mini-note" style="background:${isHex(s.c) ? s.c : "#DDE3F6"}"><span>${String(i + 1).padStart(2, "0")}</span><b>${esc(s.t)}</b></div>
+            <div class="grow"><b>${esc(s.t)}</b><p class="muted small">${esc(s.s)}</p>
+              <p class="small">${fixes.length ? `Fixes: ${fixes.map(esc).join(", ")}` : `<span class="muted">Not linked to any problem in the finder</span>`}</p></div>
+            <div class="moves"><a class="btn btn-light" href="#services/${encodeURIComponent(s.id)}">Edit</a>
+              <button class="icon-btn" data-up="${i}" aria-label="Move ${esc(s.t)} up" ${i === 0 ? "disabled" : ""}>↑</button>
+              <button class="icon-btn" data-down="${i}" aria-label="Move ${esc(s.t)} down" ${i === list.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="icon-btn danger" data-rm="${i}" aria-label="Delete ${esc(s.t)}" ${list.length === 1 ? "disabled" : ""}>✕</button></div></li>`;
+        }).join("")}</ul>
+        <p class="small muted">Reordering and deleting save straight away.</p>`;
+      $$("[data-up]").forEach((b) => (b.onclick = () => { const i = +b.dataset.up; [list[i - 1], list[i]] = [list[i], list[i - 1]]; save("Order saved."); }));
+      $$("[data-down]").forEach((b) => (b.onclick = () => { const i = +b.dataset.down; [list[i + 1], list[i]] = [list[i], list[i + 1]]; save("Order saved."); }));
+      $$("[data-rm]").forEach((b) => (b.onclick = () => {
+        const i = +b.dataset.rm, s = list[i];
+        if (!confirm(`Delete “${s.t}” from The Wall? Links to services.html#${s.id} will open The Wall without it.`)) return;
+        list.splice(i, 1);
+        site.problems.forEach((p) => { p.ids = p.ids.filter((x) => x !== s.id); });
+        save("Service deleted.");
+      }));
+    };
+    draw();
+  }
+
+  async function serviceEditor(id) {
+    const site = await api.getSite();
+    const isNew = id === "new";
+    const found = site.services.find((s) => s.id === id);
+    if (!isNew && !found) { view().innerHTML = head("Service not found") + `<p><a href="#services">← Back to services</a></p>`; return; }
+    const s = isNew
+      ? { id: "", t: "", s: "", body: "", c: NOTE_COLORS[site.services.length % NOTE_COLORS.length], rot: site.services.length % 2 ? -1.5 : 1.5, cat: "show", get: [], for: [] }
+      : clone(found);
+    let slugTouched = !isNew;
+    view().innerHTML = head(isNew ? "New service" : "Edit service", `<a href="#services">← All services</a>`, isNew ? "" : siteLink(`services.html#${s.id}`)) + `
+      <form class="editor">
+        <div class="ed-main">
+          <label>Service name<input name="t" required maxlength="80" value="${esc(s.t)}" placeholder="e.g. Email Marketing"></label>
+          <label>Web address <span class="muted">(services.html#… and the “I need this” button)</span><input name="id" required maxlength="40" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(s.id)}" ${isNew ? "" : "readonly"} title="Lowercase letters, numbers and dashes"></label>
+          <label>One-liner <span class="muted">(on the sticky note)</span><input name="s" required maxlength="200" value="${esc(s.s)}"></label>
+          <label>What it is <span class="muted">(shown when the note opens)</span><textarea name="body" rows="5" maxlength="2000">${esc(s.body)}</textarea></label>
+          <div class="two-col">
+            <label>What you get <span class="muted">(one per line)</span><textarea name="get" rows="6">${esc(s.get.join("\n"))}</textarea></label>
+            <label>Great for <span class="muted">(one per line)</span><textarea name="for" rows="6">${esc(s.for.join("\n"))}</textarea></label>
+          </div>
+        </div>
+        <div class="ed-side">
+          <div class="panel"><h3>Sticky note</h3>
+            <div class="note-preview"></div>
+            <div class="swatches">${NOTE_COLORS.map((c) => `<button type="button" class="sw" data-c="${c}" style="background:${c}" aria-label="Colour ${c}"></button>`).join("")}<input type="color" name="c" value="${isHex(s.c) ? s.c : "#DDE3F6"}" aria-label="Custom colour"></div>
+          </div>
+          <div class="panel"><h3>Problem finder</h3><p class="small muted" style="margin:0">Which problems on The Wall does this service fix? Picking a problem there lights up these notes.</p>
+            ${site.problems.map((p, i) => `<label class="switch"><input type="checkbox" name="prob" value="${i}" ${s.id && p.ids.includes(s.id) ? "checked" : ""}><span>${esc(p.p)} <span class="muted small">${esc(p.h)}</span></span></label>`).join("")}
+          </div>
+          <div class="row-end"><button class="btn btn-brand" type="submit">${isNew ? "Add to The Wall" : "Save changes"}</button></div>
+        </div>
+      </form>`;
+    const f = $(".editor");
+    const preview = () => {
+      $(".note-preview").innerHTML = `<div class="mini-note big" style="background:${isHex(f.c.value) ? f.c.value : "#DDE3F6"};transform:rotate(${Number(s.rot) || 0}deg)"><b>${esc(f.t.value || "Service name")}</b><span>${esc(f.s.value || "The one-liner goes here.")}</span></div>`;
+    };
+    f.t.oninput = () => { if (!slugTouched) f.id.value = slugify(f.t.value).slice(0, 40); preview(); };
+    f.id.oninput = () => { slugTouched = true; };
+    f.s.oninput = preview; f.c.oninput = preview;
+    $$(".sw").forEach((b) => (b.onclick = () => { f.c.value = b.dataset.c; preview(); }));
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const next = Object.assign(s, { id: f.id.value.trim(), t: f.t.value.trim(), s: f.s.value.trim(), body: f.body.value.trim(),
+        c: isHex(f.c.value) ? f.c.value : "#DDE3F6", get: lines(f.get.value), for: lines(f.for.value) });
+      if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(next.id)) return toast("The web address can only use lowercase letters, numbers and dashes.", true);
+      if (isNew && site.services.some((x) => x.id === next.id)) return toast("Another service already uses that web address. Change it.", true);
+      if (!next.get.length) return toast("Add at least one line under “What you get”.", true);
+      const picked = new Set($$("[name=prob]:checked", f).map((c) => +c.value));
+      site.problems.forEach((p, i) => {
+        p.ids = p.ids.filter((x) => x !== next.id);
+        if (picked.has(i)) p.ids.push(next.id);
+      });
+      if (isNew) site.services.push(next);
+      else site.services[site.services.findIndex((x) => x.id === next.id)] = next;
+      try { await api.saveSite(site); toast(isNew ? "Added to The Wall." : "Service saved."); location.hash = "#services"; } catch (err) { fail(err); }
     };
     preview();
   }

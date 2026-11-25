@@ -29,8 +29,16 @@ window.CS = {
     { id: "talk",     href: "start.html",    title: "Let's talk",   label: "Let's talk", stage: "Convert",  q: "How do we start?" }
   ],
 
-  /* Logo slideshow (text wordmarks until logo files are added to assets/clients/) */
-  clients: ["Domino's Pizza", "KFC", "Airtel", "Cold Stone Creamery", "pieXpress", "i-Fitness"], // PLACEHOLDER: add the brand with the orange diamond logo
+  /* Logo slideshow: brands Clicksyde has worked with. logo = file in assets/clients/; without one, the name shows as text. */
+  clients: [
+    { n: "Domino's Pizza", logo: "dominos.svg" },
+    { n: "KFC", logo: "kfc.svg" },
+    { n: "Airtel", logo: "airtel.svg" },
+    { n: "Access Bank", logo: "access-bank.png" },
+    { n: "Cold Stone Creamery", logo: "cold-stone.svg" },
+    { n: "pieXpress" },  // PLACEHOLDER: add assets/clients/piexpress.svg (or .png) and set logo
+    { n: "i-Fitness" }   // PLACEHOLDER: add assets/clients/i-fitness.svg (or .png) and set logo
+  ],
 
   /* Hero reel fallback frames (shown until assets/reel.mp4 exists) */
   reel: [

@@ -35,7 +35,7 @@ All copy lives in `js/data.js`: services, case studies, comments, articles, fun 
 ## To add before launch
 
 1. **Hero video**: put the campaign mashup at `assets/reel.mp4` (muted, about 15–30s, under 8MB). It replaces the animated frame wall automatically.
-2. **Client logos**: the slideshow uses text names in `clients`. Swap in logo images if you prefer.
+2. **Client logos**: logos live in `assets/clients/` and are listed in `clients` in `js/data.js`. Domino's, Airtel, Access Bank, KFC and Cold Stone came from Wikimedia Commons / Wikipedia; swap in the brands' official files if you have them. pieXpress and i-Fitness still show as text until their logo files are added.
 3. **Contact settings** in `js/data.js → contact`: the real inbox and WhatsApp number (social links are set to the @clicksyde accounts).
 4. **Where leads go**: form answers and newsletter sign-ups are saved to the Clicksyde Supabase project (`https://jcwekuxjhcceqprefudc.supabase.co`). To switch it on:
    1. In Supabase, open **SQL Editor**, paste in `supabase/migrations/20261125000000_clicksyde_leads.sql` and run it. This creates the `leads` and `subscribers` tables. Visitors can only add rows; only admins can read them.

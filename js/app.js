@@ -109,8 +109,8 @@
         <li><a href="start.html">Request a proposal</a></li>
         <li><a href="mailto:${D.contact.email}">${D.contact.email}</a></li></ul></div>
       <div><h4>Follow</h4><ul>
-        <li><a href="${D.contact.instagram}">Instagram</a></li><li><a href="${D.contact.linkedin}">LinkedIn</a></li>
-        <li><a href="${D.contact.x}">X</a></li><li><a href="${D.contact.tiktok}">TikTok</a></li></ul></div>
+        ${[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["x", "X"], ["tiktok", "TikTok"]].map(([k, t]) =>
+          `<li><a href="${esc(D.contact[k])}" target="_blank" rel="noopener">${t}</a></li>`).join("")}</ul></div>
     </div>
     <div class="legal"><span>© ${new Date().getFullYear()} Clicksyde. All rights reserved.</span><span>Made with too much coffee in Lagos.</span></div>
   </div>`;

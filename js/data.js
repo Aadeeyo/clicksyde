@@ -5,7 +5,8 @@ window.CS = {
   contact: {
     email: "hello@clicksyde.com",          // PLACEHOLDER: confirm the inbox leads should go to
     whatsapp: "",                          // PLACEHOLDER: business WhatsApp number in international format, digits only (e.g. 2347000000000)
-    instagram: "#", linkedin: "#", x: "#", tiktok: "#",
+    instagram: "https://www.instagram.com/clicksyde/", linkedin: "https://www.linkedin.com/company/clicksyde/",
+    x: "https://x.com/clicksyde", tiktok: "https://www.tiktok.com/@clicksyde",
   },
 
   /* Where form answers and newsletter sign-ups are saved: the Clicksyde Supabase project.

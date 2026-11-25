@@ -47,6 +47,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Newsletter | The Syde Note sign-ups; unsubscribe / resubscribe, export the active list as CSV |
 | Blog | Write, edit, publish, unpublish, feature and delete Insights articles, with a cover colour, cover text or uploaded cover image |
 | Services | Add, edit, reorder and delete the sticky notes on the Services wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
+| Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
 | Client logos | Add, rename, reorder and remove brands in the home page slideshow, and upload their logos |
 | Contact & social | Lead inbox, WhatsApp number and the Instagram / LinkedIn / X / TikTok links |
 | Layout & brand | Show, hide and reorder the home page sections (the hero stays first) and change the brand colour |
@@ -61,6 +62,8 @@ What the admin saves is loaded by `js/content.js` on top of `js/data.js`. If the
 2. Create each team member under **Authentication → Users** (with a password, or let them use the emailed sign-in link), then add their user id to the `admins` table.
 3. Under **Authentication → URL Configuration**, add the site's `/admin.html` address to the redirect URLs so emailed sign-in links work.
 4. Sign in at `/admin.html`. The first time you open **Blog**, import the starter articles (or start empty) so the blog is managed from the admin from then on.
+
+**Page copy for developers.** Every fixed text on a page carries `data-copy="<page>.<n>"` (e.g. `home.4`). Edits are saved by that id in `site_content.data.copy` and applied by `js/app.js` before the page renders; `js/editor.js` is the on-page editor (loaded with `?edit=1`). Never renumber existing ids, or saved edits land on the wrong text. Give new text the next unused number on that page. Edited copy is cleaned to plain text plus bold/italic, line breaks, links and the `serif`/`accent` highlight spans.
 
 Not in the admin yet (still edited in `js/data.js`): case studies and comments, team and fun facts, page headlines, the wording of the problem-finder problems.
 

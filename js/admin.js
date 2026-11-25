@@ -64,6 +64,7 @@
       theme: d.theme && isHex(d.theme.brand) ? d.theme : { brand: "#FF4306" },
       services: Array.isArray(d.services) && d.services.length ? d.services : clone(D0.services),
       problems: Array.isArray(d.problems) ? d.problems : clone(D0.problems),
+      copy: d.copy && typeof d.copy === "object" ? d.copy : {},
       postsManaged: !!d.postsManaged
     };
   };
@@ -231,6 +232,7 @@
     ["newsletter", "Newsletter", "M5 4h14v16l-7-4-7 4z"],
     ["blog", "Blog", "M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14"],
     ["services", "Services", "M5 4h14v11l-5 5H5zM14 20v-5h5"],
+    ["copy", "Page copy", "M4 6h16M4 12h10M4 18h13"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
     ["layout", "Layout & brand", "M4 4h16v5H4zM4 12h7v8H4zM14 12h6v8h-6z"]
@@ -277,6 +279,7 @@
       else if (sec === "newsletter") await newsletter();
       else if (sec === "blog") arg ? await editor(decodeURIComponent(arg)) : await blog();
       else if (sec === "services") arg ? await serviceEditor(decodeURIComponent(arg)) : await services();
+      else if (sec === "copy") await pageCopy();
       else if (sec === "clients") await clients();
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
@@ -602,6 +605,29 @@
       try { await api.saveSite(site); toast(isNew ? "Added to The Wall." : "Service saved."); location.hash = "#services"; } catch (err) { fail(err); }
     };
     preview();
+  }
+
+  /* ---------- Page copy: edited on the page itself (js/editor.js) ---------- */
+  const PAGES = [["home", "index.html", "Home"], ["services", "services.html", "Services"], ["work", "work.html", "Work"],
+    ["insights", "insights.html", "Insights"], ["about", "about.html", "About"], ["start", "start.html", "Contact"]];
+  async function pageCopy() {
+    const site = await api.getSite();
+    const count = (p) => Object.keys(site.copy).filter((k) => k.startsWith(p + ".")).length;
+    const editLink = (file) => api.link(file) + "&edit=1";
+    view().innerHTML = head("Page copy", "Headlines, intros, buttons and section text on every page. Open a page, click any outlined text, type, and save.") + `
+      <ul class="rows">${PAGES.map(([id, file, name]) => `<li>
+        <div class="grow"><b>${name}</b><p class="muted small" style="margin:2px 0 0">${count(id) ? `${count(id)} text${count(id) === 1 ? "" : "s"} changed from the original` : "Original wording"}</p></div>
+        <a class="btn btn-brand" href="${esc(editLink(file))}">Edit on page</a>
+        ${count(id) ? `<button class="linkish" data-reset="${id}">Back to original</button>` : ""}</li>`).join("")}</ul>
+      <div class="panel"><h3>How it works</h3>
+        <p class="small muted" style="margin:0">Each page opens with its text outlined. Click a text and type; press Enter to finish a line. <b>Original wording</b> puts back the text the site launched with. Nothing changes for visitors until you press <b>Save</b>${mode === "demo" ? " (in demo mode, saving only affects this browser)" : ""}.</p>
+        <p class="small muted" style="margin:0">Services, articles, client logos and contact details have their own sections in this admin. Case studies, the team and the About page facts are still edited in the website's code.</p></div>`;
+    $$("[data-reset]").forEach((b) => (b.onclick = async () => {
+      const id = b.dataset.reset;
+      if (!confirm(`Put every text on ${PAGES.find((p) => p[0] === id)[2]} back to its original wording?`)) return;
+      Object.keys(site.copy).forEach((k) => { if (k.startsWith(id + ".")) delete site.copy[k]; });
+      try { await api.saveSite(site); toast("Back to the original wording."); route(); } catch (err) { fail(err); }
+    }));
   }
 
   /* ---------- Client logos ---------- */

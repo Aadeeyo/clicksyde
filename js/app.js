@@ -12,6 +12,14 @@
   const idx = chapters.findIndex((c) => c.id === page);
   const current = chapters[idx];
 
+  /* Page copy edited on the page (admin → Page copy). The original wording is kept for "Original wording". */
+  window.CScopyOriginal = {};
+  $$("[data-copy]").forEach((el) => {
+    const k = el.dataset.copy;
+    window.CScopyOriginal[k] = el.innerHTML;
+    if (D.copy && typeof D.copy[k] === "string" && D.copy[k]) el.innerHTML = D.copy[k];
+  });
+
   /* Brand colour chosen in the admin panel (Layout & brand) */
   if (D.theme && D.theme.brand && D.theme.brand.toUpperCase() !== "#FF4306") {
     const r = document.documentElement.style;
@@ -634,6 +642,9 @@
   }
 
   if (R[page]) R[page]();
+  if (new URLSearchParams(location.search).has("edit")) {
+    const ed = document.createElement("script"); ed.src = "js/editor.js?v=1"; document.body.appendChild(ed);
+  }
   newsletter();
   observe();
   $$("[data-count]").forEach((el) => countIO.observe(el));

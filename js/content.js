@@ -37,6 +37,34 @@
     ["instagram", "linkedin", "x", "tiktok"].forEach((k) => { if (k in c) out[k] = httpsUrl(c[k]) || "#"; });
     return out;
   };
+  /* Page copy edited on the page (js/editor.js): keep only plain text and a few inline styles */
+  const INLINE = { B: 1, STRONG: 1, I: 1, EM: 1, SMALL: 1, BR: 1, SPAN: 1, A: 1 };
+  const SPAN_CLASSES = ["serif", "accent", "arr"];
+  const okHref = (h) => /^(https:\/\/|http:\/\/|mailto:|tel:|#|[\w.\/-]+\.html(#[\w-]+)?(\?[\w=&-]*)?$|[\w.\/-]+#[\w-]+$)/i.test(h || "");
+  function cleanCopy(html) {
+    const t = document.createElement("template");
+    t.innerHTML = String(html || "").slice(0, 4000);
+    const walk = (node) => {
+      Array.from(node.childNodes).forEach((n) => {
+        if (n.nodeType === 3) return;
+        if (n.nodeType !== 1 || !INLINE[n.tagName]) {
+          if (n.nodeType === 1 && /^(SCRIPT|STYLE|TEMPLATE|IFRAME|OBJECT|SVG)$/i.test(n.tagName)) { n.remove(); return; }
+          walk(n); n.replaceWith(...Array.from(n.childNodes)); return;
+        }
+        walk(n);
+        const keep = {};
+        if (n.tagName === "SPAN") { const c = (n.getAttribute("class") || "").split(/\s+/).filter((x) => SPAN_CLASSES.includes(x)); if (c.length) keep.class = c.join(" "); }
+        if (n.tagName === "A" && okHref(n.getAttribute("href"))) keep.href = n.getAttribute("href");
+        if (n.getAttribute("aria-hidden") === "true") keep["aria-hidden"] = "true";
+        Array.from(n.attributes).forEach((a) => n.removeAttribute(a.name));
+        Object.entries(keep).forEach(([k, v]) => n.setAttribute(k, v));
+        if (n.tagName === "SPAN" && !keep.class && !keep["aria-hidden"]) n.replaceWith(...Array.from(n.childNodes));
+      });
+    };
+    walk(t.content);
+    return t.innerHTML.replace(/\u00a0/g, " ").replace(/&nbsp;/g, " ").trim();
+  }
+
   const month = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-GB", { month: "short", year: "numeric" }); };
 
   function apply(site, posts, allowData) {
@@ -50,6 +78,10 @@
         D0.layout.home.forEach((b) => { if (!D.layout.home.includes(b)) D.layout.home.push(b); }); // new blocks added in code still show
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
+      if (site.copy && typeof site.copy === "object") {
+        D.copy = {};
+        Object.keys(site.copy).forEach((k) => { if (/^[a-z]+\.\d+$/.test(k) && typeof site.copy[k] === "string") D.copy[k] = cleanCopy(site.copy[k]); });
+      }
       if (Array.isArray(site.services)) {
         const strs = (a, n) => (Array.isArray(a) ? a : []).map((x) => String(x).trim().slice(0, n)).filter(Boolean).slice(0, 12);
         const seen = new Set();
@@ -104,7 +136,7 @@
   }
   const readDemo = () => { try { return JSON.parse(local.get(DEMO_KEY)) || null; } catch (_) { return null; } };
   const writeDemo = (s) => local.set(DEMO_KEY, JSON.stringify(s));
-  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, month };
+  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, month, cleanCopy };
 
   if (document.body.dataset.page === "admin") return; // the admin panel only needs the store
 
@@ -112,7 +144,7 @@
   const params = new URLSearchParams(location.search);
   if (params.get("demo") === "1") session.set(VIEW_KEY, "1");
   if (params.get("demo") === "0") session.del(VIEW_KEY);
-  if (params.has("fresh")) session.del(CACHE_KEY); // the admin's "View site" link: skip the cached copy
+  if (params.has("fresh") || params.has("edit")) session.del(CACHE_KEY); // the admin's "View site" link: skip the cached copy
   const demo = session.get(VIEW_KEY) === "1";
 
   if (demo) {

@@ -41,9 +41,7 @@
   header.innerHTML = `
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Clicksyde home">${logo()}</a>
-      <nav class="main-nav" aria-label="Main">${chapters.filter((c) => c.id !== "home" && c.id !== "talk").map((c) =>
-        `<a href="${c.href}" ${c.id === page ? 'aria-current="page"' : ""}>${esc(c.label)}</a>`).join("")}</nav>
-      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html">Enquire</a>` : `<span class="header-cta"></span>`}
+      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html"><span class="dot"></span>Let's talk</a>` : `<span class="header-cta"></span>`}
       <button class="menu-btn" aria-label="Open the story menu" aria-expanded="false" aria-controls="story-menu"><span></span></button>
     </div>
     <div class="progress" aria-hidden="true"></div>`;
@@ -61,7 +59,7 @@
         <span class="q">${esc(c.q)}</span></a></li>`).join("")}
     </ol>
     <div class="menu-foot">
-      <a class="btn btn-light" href="start.html">Enquire <span class="arr">→</span></a>
+      <a class="btn btn-brand" href="start.html">Let's talk <span class="arr">→</span></a>
       <a class="btn btn-ghost" href="mailto:${D.contact.email}">${D.contact.email}</a>
     </div>`;
   document.body.appendChild(menu);
@@ -74,6 +72,14 @@
   };
   menuBtn.addEventListener("click", () => setMenu(true));
   $(".close", menu).addEventListener("click", () => setMenu(false));
+
+  /* ---------- Dock ---------- */
+  const dock = document.createElement("nav");
+  dock.className = "dock"; dock.setAttribute("aria-label", "Main");
+  dock.innerHTML = chapters.map((c) => `
+    <a href="${c.href}" class="${c.id === "talk" ? "go" : ""}" ${c.id === page ? 'aria-current="page"' : ""} aria-label="${esc(c.label)}" title="${esc(c.label)}">
+      ${icons[c.id]}<span class="lbl">${esc(c.label)}</span></a>`).join("");
+  document.body.appendChild(dock);
 
 
   /* ---------- Turn the page: every chapter ends by pointing to the next one ---------- */
@@ -97,7 +103,7 @@
   footer.innerHTML = `<div class="wrap">
     <div class="cols">
       <div><a class="brand" href="index.html" aria-label="Clicksyde home">${logo()}</a>
-        <p class="muted" style="max-width:32ch;margin-top:18px">PR &amp; digital agency. We make brands impossible to overlook.</p></div>
+        <p class="muted" style="max-width:32ch;margin-top:14px">We make brands impossible to overlook.</p></div>
       <div><h4>Explore</h4><ul>${chapters.map((c) => `<li><a href="${c.href}">${esc(c.title)}</a></li>`).join("")}</ul></div>
       <div><h4>Start</h4><ul>
         <li><a href="start.html">Request a proposal</a></li>
@@ -152,10 +158,20 @@
 
   /* ----- 01 HOME ----- */
   R.home = () => {
-    // Reel: assets/reel.mp4 plays over the hero photograph once it exists; until then the photograph shows.
-    const v = $(".hero-media video");
+    // Reel: use assets/reel.mp4 if present, otherwise a calm wall of campaign frames
+    const reel = $(".hero-reel");
+    const cols = window.innerWidth >= 900 ? 4 : 2;
+    let wall = '<div class="reel-wall" aria-hidden="true">';
+    for (let c = 0; c < cols; c++) {
+      const frames = D.reel.slice(c * 2).concat(D.reel.slice(0, c * 2)).slice(0, 4);
+      const list = frames.concat(frames); // doubled for a seamless loop
+      wall += `<div class="reel-col" style="animation-delay:${-c * 11}s">${list.map(([col, cap]) =>
+        `<div class="frame" style="background:linear-gradient(165deg, ${col}, ${col}bb 55%, #171512)"><span>${esc(cap)}</span></div>`).join("")}</div>`;
+    }
+    reel.insertAdjacentHTML("afterbegin", wall + "</div>");
+    const v = $("video", reel);
     if (v) {
-      v.addEventListener("loadeddata", () => v.classList.add("on"), { once: true });
+      v.addEventListener("loadeddata", () => { $(".reel-wall", reel).remove(); }, { once: true });
       v.addEventListener("error", () => v.remove(), true);
       $$("source", v).forEach((s) => s.addEventListener("error", () => v.remove()));
     }

@@ -5,34 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Clicksyde | We make brands impossible to overlook</title>
   <meta name="description" content="Clicksyde is a marketing studio for ambitious businesses. Strategy, content, ads and experiences that get you seen, chosen and remembered.">
-  <meta name="theme-color" content="#0E0E0D">
+  <meta name="theme-color" content="#171512">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/clicksyde.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300..500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/clicksyde.css?v=4">
 </head>
 <body data-page="home">
 <main>
 
-  <!-- HERO: editorial split. Add assets/reel.mp4 (muted campaign mashup) and it plays over the photograph. -->
+  <!-- HERO: headline over the campaign reel. Add assets/reel.mp4 (muted mashup of campaigns) and it replaces the frame wall. -->
   <section class="hero" aria-label="Introduction">
-    <div class="hero-grid">
-      <div class="hero-copy wrap">
-        <span class="eyebrow rv">PR &amp; Digital Agency · Lagos</span>
-        <h1 class="rv">We make brands <span class="serif accent">impossible</span> to overlook.</h1>
+    <div class="hero-reel">
+      <video autoplay muted loop playsinline preload="metadata">
+        <source src="assets/reel.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="hero-shade"></div>
+    <div class="wrap">
+      <span class="live"><i></i> Now showing: campaigns we've shipped</span>
+      <div class="hero-split">
+        <h1 class="rv">We make brands <span class="serif">impossible</span> to overlook.</h1>
         <div class="rv rv-d2">
-          <p class="lead">Strategy, content, media and experiences for brands that intend to lead their category. Planned, made and measured by one senior team.</p>
+          <p class="lead">Clicksyde is a marketing studio for businesses that want to grow. We plan it, make it, run it and show you what it earned.</p>
           <div class="ctas">
-            <a class="btn btn-brand" href="start.html">Start a conversation <span class="arr">→</span></a>
-            <a class="btn btn-light" href="work.html">View our work</a>
+            <a class="btn btn-brand" href="start.html">Tell us what you need <span class="arr">→</span></a>
+            <a class="btn btn-light" href="work.html">See our work</a>
           </div>
         </div>
       </div>
-      <figure class="hero-media">
-        <img src="assets/img/hero-portrait.webp" alt="Woman in amber sunglasses and a black turtleneck, lit in orange" fetchpriority="high">
-        <video autoplay muted loop playsinline preload="metadata" aria-hidden="true"><source src="assets/reel.mp4" type="video/mp4"></video>
-      </figure>
     </div>
+    <span class="scroll-cue">Scroll to start the story ↓</span>
   </section>
 
   <!-- LOGO SLIDESHOW -->
@@ -115,11 +118,11 @@
     </div>
   </section>
 
-  <span data-next-line="Every discipline a modern brand needs, under one roof."></span>
+  <span data-next-line="Every service on one wall. One of them is the fix you're looking for."></span>
 </main>
 <script src="js/data.js?v=2"></script>
 <script src="js/logo.js?v=1"></script>
 <script src="js/content.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/app.js?v=4"></script>
 </body>
 </html>

@@ -125,7 +125,7 @@
   });
 
   const bar = $(".progress", header);
-  const darkHero = $(".hero");
+  const darkHero = $(".hero:not(.sh-card)");
   const onScroll = () => {
     const h = document.documentElement.scrollHeight - innerHeight;
     bar.style.width = (h > 0 ? (scrollY / h) * 100 : 0) + "%";
@@ -158,6 +158,35 @@
 
   /* ----- 01 HOME ----- */
   R.home = () => {
+    // Split hero: the wordmark halves part as you scroll and the reel card grows in between
+    const sh = $(".split-hero");
+    if (sh) {
+      const halves = $$(".sh-half", sh);
+      const fit = () => {
+        const t = $("text", halves[0]);
+        const box = t.getBBox();
+        // exact cap height, so the split runs through the middle of the letters
+        const c = document.createElement("canvas").getContext("2d");
+        const cs = getComputedStyle(t);
+        c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        try { c.fontStretch = "extra-condensed"; } catch (_) {}
+        const m = c.measureText("CLICKSYDE");
+        const asc = m.actualBoundingBoxAscent || box.height * .72, desc = m.actualBoundingBoxDescent || 0;
+        halves.forEach((svg) => svg.setAttribute("viewBox", `${box.x} ${-asc} ${box.width} ${asc + desc}`));
+      };
+      (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (still) sh.classList.add("still");
+      const split = () => {
+        if (still) return;
+        const r = sh.getBoundingClientRect();
+        const run = sh.offsetHeight - $(".sh-stage", sh).offsetHeight;
+        const p = Math.min(1, Math.max(0, -r.top / (run || 1)));
+        sh.style.setProperty("--p", p.toFixed(4));
+        sh.classList.toggle("open", p > .55);
+      };
+      addEventListener("scroll", split, { passive: true }); addEventListener("resize", split); split();
+    }
     // Reel: use assets/reel.mp4 if present, otherwise a calm wall of campaign frames
     const reel = $(".hero-reel");
     const cols = window.innerWidth >= 900 ? 4 : 2;
@@ -588,7 +617,7 @@
 
   /* Home layout chosen in the admin panel: section order and hidden sections (the hero stays first) */
   if (page === "home" && D.layout) {
-    let after = $(".hero");
+    let after = $("#after-hero") || $(".hero");
     D.layout.home.forEach((id) => {
       const el = $(`[data-block="${id}"]`); if (!el || !after) return;
       after.after(el); after = el;

@@ -685,6 +685,90 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.042em; }
 .done-card { background: radial-gradient(90% 90% at 100% 0%, rgba(255,67,6,.2), transparent 60%), var(--ink); }
 .demo-banner { border-radius: 14px; }
 
+/* =========================================================
+   SPLIT HERO: giant wordmark that splits open on scroll
+   ========================================================= */
+.split-hero { --p: 0; --peach: #FFECE3; position: relative; height: 230svh; background: var(--peach); color: var(--ink); }
+.sh-stage {
+  position: sticky; top: 76px; height: calc(100svh - 76px); overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto; padding: 22px var(--gutter) 104px; /* bottom: room for the dock */
+}
+.sh-meta, .sh-foot { position: relative; z-index: 3; opacity: clamp(0, calc(1 - var(--p) * 3), 1); }
+.sh-meta { display: flex; justify-content: space-between; gap: 16px; font-size: 12.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.sh-kicker { display: inline-flex; align-items: center; gap: 12px; }
+.sh-kicker i { width: 16px; height: 11px; background: linear-gradient(var(--brand) 0 40%, transparent 40% 60%, var(--brand) 60%); }
+.sh-word { position: relative; z-index: 2; align-self: center; height: clamp(120px, 34vw, 560px); max-height: 100%; pointer-events: none; }
+.sh-half { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; }
+.sh-half text {
+  font-family: "Archivo", "Archivo Narrow", "Arial Narrow", sans-serif; font-weight: 900; font-stretch: 62%;
+  font-size: 200px; fill: var(--brand); letter-spacing: -2px;
+}
+.sh-half { --go: min(calc(var(--p) * 1.9), 1); opacity: clamp(0, calc(1.6 - var(--p) * 2.2), 1); }
+.sh-top { clip-path: inset(0 0 50% 0); transform: translateY(calc(var(--go) * -72svh - 1.5px)); }
+.sh-bottom { clip-path: inset(50% 0 0 0); transform: translateY(calc(var(--go) * 72svh + 1.5px)); }
+.sh-foot { display: grid; gap: 18px; align-items: end; }
+@media (min-width: 900px) { .sh-foot { grid-template-columns: 1.2fr auto 1.2fr; gap: 32px; } }
+.sh-foot p { margin: 0; font-size: clamp(17px, 1.6vw, 22px); line-height: 1.35; letter-spacing: -.02em; color: var(--ink-2); max-width: 30ch; }
+.sh-cue { display: flex; gap: 28px; align-items: center; font-size: 12.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.sh-cue > span { border-left: 3px solid var(--brand); padding: 4px 0 4px 14px; }
+.sh-cue a { text-decoration: none; }
+.sh-cue a:hover { color: var(--brand); }
+.sh-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 6px 0; font-size: 12.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+@media (min-width: 900px) { .sh-tags { justify-content: flex-end; text-align: right; } }
+.sh-tags li:not(:last-child)::after { content: "/"; color: var(--brand); margin: 0 14px; }
+
+/* the reel card that opens up between the halves */
+.sh-card.hero {
+  position: absolute; inset: 14px var(--gutter) 14px; z-index: 1; min-height: 0; border-radius: var(--radius-lg);
+  opacity: clamp(0, calc(var(--p) * 2.6 - .2), 1); transform: scale(min(calc(.84 + var(--p) * .3), 1));
+  box-shadow: 0 40px 80px -40px rgba(23,21,18,.6); pointer-events: none;
+}
+.split-hero.open .sh-card { pointer-events: auto; }
+.sh-card .wrap { padding-bottom: clamp(36px, 7vh, 72px); }
+.sh-card h1 { font-size: clamp(40px, 6.6vw, 104px); }
+@media (max-width: 899px) {
+  .split-hero { height: 200svh; }
+  .sh-stage { padding-top: 16px; padding-bottom: 96px; }
+  .sh-card .lead { font-size: 16px; }
+  .sh-cue { gap: 20px; }
+}
+@media (max-width: 600px) { .sh-tags { display: none; } }
+@media (max-width: 400px) { .sh-meta, .sh-cue { font-size: 10.5px; letter-spacing: .12em; } .sh-cue { gap: 16px; } .sh-cue > span { padding-left: 10px; } }
+/* reduced motion: no scroll effect, the card simply sits below the wordmark */
+.split-hero.still { height: auto; }
+.split-hero.still .sh-stage { position: static; height: auto; display: flex; flex-direction: column; overflow: visible; }
+.split-hero.still .sh-word { order: 1; align-self: stretch; } .split-hero.still .sh-foot { order: 2; } .split-hero.still .sh-card { order: 3; }
+.split-hero.still .sh-word { height: clamp(120px, 34vw, 560px); margin: 24px 0; }
+.split-hero.still .sh-card.hero { position: relative; inset: auto; min-height: 80svh; opacity: 1; transform: none; margin-top: 32px; pointer-events: auto; }
+.split-hero.still .sh-cue > span { display: none; }
+
+/* ---------- Narrow phones (iPhone SE, Galaxy S9+, fold/flip cover screens: 320–380px) ---------- */
+.wall, .stats, .team { grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); }
+.wall, .stats, .team { --cols: 2; }
+@media (min-width: 760px) { .wall { --cols: 3; } }
+@media (min-width: 900px) { .stats, .team { --cols: 4; } }
+.case .stats { --cols: 2; }
+.note .nt, .stat b, .verb h3, .step h3 { overflow-wrap: anywhere; hyphens: auto; }
+.newsletter { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .newsletter { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.newsletter h2 { overflow-wrap: anywhere; }
+.nl-form { min-width: 0; }
+.nl-form .btn { flex: none; }
+.featured .art .big { font-size: clamp(40px, 11vw, 140px); }
+@media (max-width: 380px) {
+  .site-header .header-cta { display: none; }
+  .menu-btn { margin-left: auto; }
+  .dock a { min-width: 42px; padding: 0 9px; height: 46px; }
+  .dock a[aria-current="page"] { padding: 0 12px; }
+  .dock a[aria-current="page"] .lbl { display: none; }
+  .dock a.go { width: 46px; }
+  .note .nt { font-size: 17px; }
+  .note { padding: 12px; }
+  .stat { padding: 18px 16px; }
+  .stat b { font-size: 34px; }
+  .stat span { font-size: 13px; }
+}
+
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }
 .featured .art, .post .art { position: relative; overflow: hidden; }

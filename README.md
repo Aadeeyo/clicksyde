@@ -21,7 +21,7 @@ Each page is a **chapter** that answers one question a prospective client has. E
 
 ## What's on each page
 
-- **Home**: hero headline over a calm wall of campaign frames (or the reel video), the client logo strip, the message in one sentence (it lights up as you scroll), *Be seen / Be chosen / Be remembered*, an "Is this for me?" checklist, headline numbers and the client journey.
+- **Home**: a giant CLICKSYDE wordmark that splits open as you scroll and reveals the campaign reel card ("We make brands impossible to overlook"; "Skip the split" jumps past it, and with reduced motion it simply stacks), then the client logo strip, the message in one sentence, *Be seen / Be chosen / Be remembered*, an "Is this for me?" checklist, headline numbers and the client journey.
 - **Services**: the services as sticky notes on a soft board. Tap a note and it opens into a full explanation (what you get, who it's for; "I need this" goes to the form with that service filled in). Problem chips and a problem finder light up the notes that fix a given problem. Notes can be linked directly, e.g. `services.html#ads`.
 - **Work**: case studies (image carousel, "Clicksyde with Client" byline, results, expandable story), each followed by the client's testimonial and Clicksyde's reply.
 - **Insights**: featured article, category filters, article cards that open in a full-screen reader, and the newsletter sign-up (*The Syde Note*).

@@ -8,35 +8,58 @@
   <meta name="theme-color" content="#171512">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300..500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/clicksyde.css?v=4">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,800..900&family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300..500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/clicksyde.css?v=5">
 </head>
 <body data-page="home">
 <main>
 
-  <!-- HERO: headline over the campaign reel. Add assets/reel.mp4 (muted mashup of campaigns) and it replaces the frame wall. -->
-  <section class="hero" aria-label="Introduction">
-    <div class="hero-reel">
-      <video autoplay muted loop playsinline preload="metadata">
-        <source src="assets/reel.mp4" type="video/mp4">
-      </video>
-    </div>
-    <div class="hero-shade"></div>
-    <div class="wrap">
-      <span class="live"><i></i> Now showing: campaigns we've shipped</span>
-      <div class="hero-split">
-        <h1 class="rv">We make brands <span class="serif">impossible</span> to overlook.</h1>
-        <div class="rv rv-d2">
-          <p class="lead">Clicksyde is a marketing studio for businesses that want to grow. We plan it, make it, run it and show you what it earned.</p>
-          <div class="ctas">
-            <a class="btn btn-brand" href="start.html">Tell us what you need <span class="arr">→</span></a>
-            <a class="btn btn-light" href="work.html">See our work</a>
+  <!-- HERO: the giant wordmark splits open as you scroll and reveals the campaign reel.
+       Add assets/reel.mp4 (muted mashup of campaigns) and it replaces the frame wall inside the card. -->
+  <section class="split-hero" aria-label="Introduction">
+    <div class="sh-stage">
+      <div class="sh-meta">
+        <span class="sh-kicker"><i aria-hidden="true"></i>Get on the right</span>
+        <span>Lagos, Nigeria</span>
+      </div>
+
+      <div class="sh-card hero">
+        <div class="hero-reel">
+          <video autoplay muted loop playsinline preload="metadata">
+            <source src="assets/reel.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="hero-shade"></div>
+        <div class="wrap">
+          <span class="live"><i></i> Now showing: campaigns we've shipped</span>
+          <div class="hero-split">
+            <h1>We make brands <span class="serif">impossible</span> to overlook.</h1>
+            <div>
+              <p class="lead">Clicksyde is a marketing studio for businesses that want to grow. We plan it, make it, run it and show you what it earned.</p>
+              <div class="ctas">
+                <a class="btn btn-brand" href="start.html">Tell us what you need <span class="arr">→</span></a>
+                <a class="btn btn-light" href="work.html">See our work</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <div class="sh-word" role="img" aria-label="Clicksyde">
+        <svg class="sh-half sh-top" viewBox="0 -142 1000 142" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><text x="0" y="0">CLICKSYDE</text></svg>
+        <svg class="sh-half sh-bottom" viewBox="0 -142 1000 142" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><text x="0" y="0">CLICKSYDE</text></svg>
+      </div>
+
+      <div class="sh-foot">
+        <p>PR, digital marketing and talent management that make you seen, trusted and bought.</p>
+        <div class="sh-cue"><span>Scroll to split</span><a href="#after-hero">Skip the split <span aria-hidden="true">↓</span></a></div>
+        <ul class="sh-tags" aria-label="What we do">
+          <li>Public relations</li><li>Performance ads</li><li>Social media</li><li>SEO &amp; growth</li><li>Talent management</li>
+        </ul>
+      </div>
     </div>
-    <span class="scroll-cue">Scroll to start the story ↓</span>
   </section>
+  <span id="after-hero"></span>
 
   <!-- LOGO SLIDESHOW -->
   <section data-block="logos" class="marquee" aria-label="Brands we've worked with">
@@ -123,6 +146,6 @@
 <script src="js/data.js?v=2"></script>
 <script src="js/logo.js?v=1"></script>
 <script src="js/content.js?v=3"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>

@@ -29,6 +29,10 @@ window.CS = {
     { id: "talk",     href: "start.html",    title: "Let's talk",   label: "Let's talk", stage: "Convert",  q: "How do we start?" }
   ],
 
+  /* Home page sections, in order. The admin panel can reorder and hide them (hero always comes first). */
+  layout: { home: ["logos", "message", "pillars", "fit", "numbers", "journey"], hidden: [] },
+  theme: { brand: "#FF4306" },
+
   /* Logo slideshow: brands Clicksyde has worked with. logo = file in assets/clients/; without one, the name shows as text. */
   clients: [
     { n: "Domino's Pizza", logo: "dominos.svg" },

@@ -2,7 +2,7 @@
    Every page sets <body data-page="home|wall|work|insights|about|talk">.
    The shell (header, story menu, dock, next-chapter link, footer) is built here so the
    chapters always link to each other in the same order. */
-(function () {
+(window.CSready || Promise.resolve()).then(function () {
   const D = window.CS;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -11,6 +11,14 @@
   const chapters = D.chapters;
   const idx = chapters.findIndex((c) => c.id === page);
   const current = chapters[idx];
+
+  /* Brand colour chosen in the admin panel (Layout & brand) */
+  if (D.theme && D.theme.brand && D.theme.brand.toUpperCase() !== "#FF4306") {
+    const r = document.documentElement.style;
+    r.setProperty("--brand", D.theme.brand);
+    r.setProperty("--brand-ink", `color-mix(in srgb, ${D.theme.brand} 82%, #000)`);
+    r.setProperty("--brand-soft", `color-mix(in srgb, ${D.theme.brand} 14%, #fff)`);
+  }
 
   /* ---------- Brand mark (approximation of the logo: segmented ring + cursor) ---------- */
   const mark = (fg = "#FF4306", cursor = "currentColor") => `
@@ -178,11 +186,13 @@
 
     // Logo slideshow
     // The track scrolls by half its width, so each half must be wider than the widest screen: repeat short lists.
-    const one = D.clients.map((c) => c.logo
-      ? `<img src="assets/clients/${esc(c.logo)}" alt="${esc(c.n)}" loading="lazy">`
-      : `<span>${esc(c.n)}</span>`).join("");
-    const half = one.repeat(Math.max(1, Math.ceil(12 / D.clients.length)));
-    $(".marquee-track").innerHTML = half + half;
+    if (D.clients.length) {
+      const one = D.clients.map((c) => c.src
+        ? `<img src="${esc(c.src)}" alt="${esc(c.n)}" loading="lazy">`
+        : `<span>${esc(c.n)}</span>`).join("");
+      const half = one.repeat(Math.max(1, Math.ceil(12 / D.clients.length)));
+      $(".marquee-track").innerHTML = half + half;
+    } else $(".marquee").hidden = true;
 
     // One-liner lights up word by word as you scroll past it
     const ol = $(".oneliner p");
@@ -347,17 +357,22 @@
 
   /* ----- 04 INSIGHTS ----- */
   R.insights = () => {
+    if (!D.posts.length) {
+      $(".featured-slot").innerHTML = `<p class="lead">New articles are on the way. Join the newsletter below and get the first one in your inbox.</p>`;
+      return;
+    }
+    const art = (p, big) => p.image ? `<img class="cover" src="${esc(p.image)}" alt="">` : big ? `<span class="big">${esc(p.art)}</span>` : esc(p.art);
     const f = D.posts.find((p) => p.featured) || D.posts[0];
     const meta = (p) => `<div class="post-meta"><span class="cat">${esc(p.cat)}</span><span>${p.mins} min read</span><span>·</span><span>${esc(p.date)}</span></div>`;
-    $(".featured-slot").innerHTML = `<button class="featured rv" data-id="${f.id}">
-      <div class="art" style="background:${f.color}"><span class="big">${esc(f.art)}</span></div>
+    $(".featured-slot").innerHTML = `<button class="featured rv" data-id="${esc(f.id)}">
+      <div class="art" style="background:${f.color}">${art(f, true)}</div>
       <div class="txt">${meta(f)}<h2>${esc(f.title)}</h2><p class="muted" style="margin:0">${esc(f.ex)}</p>
       <span class="btn btn-dark" style="align-self:flex-start;margin-top:8px">Read it <span class="arr">→</span></span></div></button>`;
     const rest = D.posts.filter((p) => p !== f);
     const cats = ["All", ...new Set(D.posts.map((p) => p.cat))];
     $(".feed-filters").innerHTML = cats.map((c, i) => `<button class="chip" data-f="${esc(c)}" aria-pressed="${i === 0}">${esc(c)}</button>`).join("");
-    $(".posts").innerHTML = rest.map((p, i) => `<button class="post rv rv-d${i % 3}" data-id="${p.id}" data-cat="${esc(p.cat)}">
-      <div class="art" style="background:${p.color}">${esc(p.art)}</div>
+    $(".posts").innerHTML = rest.map((p, i) => `<button class="post rv rv-d${i % 3}" data-id="${esc(p.id)}" data-cat="${esc(p.cat)}">
+      <div class="art" style="background:${p.color}">${art(p)}</div>
       <div class="txt">${meta(p)}<h3>${esc(p.title)}</h3><p>${esc(p.ex)}</p></div></button>`).join("");
     $(".feed-filters").addEventListener("click", (e) => {
       const c = e.target.closest(".chip"); if (!c) return;
@@ -370,7 +385,8 @@
     let opener = null;
     const open = (id) => {
       const p = D.posts.find((x) => x.id === id);
-      const body = p.body || [["p", p.ex], ["p", "PLACEHOLDER: this article is still being written. The content team adds the full text in js/data.js (posts → body)."]];
+      if (!p) return;
+      const body = p.body || [["p", p.ex], ["p", "This article is still being written. Check back soon."]];
       $("article", reader).innerHTML = `${meta(p)}<h1>${esc(p.title)}</h1>` + body.map(([t, x]) =>
         t === "h" ? `<h2>${esc(x)}</h2>` : t === "q" ? `<blockquote>${esc(x)}</blockquote>` : `<p>${esc(x)}</p>`).join("") +
         `<div class="end"><h3 style="font-size:28px">Want this kind of thinking on your brand?</h3>
@@ -565,6 +581,7 @@
      Returns true when saved. Returns false when Supabase isn't set up yet or the save failed,
      so the page can offer email/WhatsApp instead. */
   async function save(table, row) {
+    if (D.demo && window.CSdemo) return window.CSdemo.save(table, row);
     const sb = D.supabase || {};
     if (!sb.url || !sb.key) return false;
     const headers = { "Content-Type": "application/json", apikey: sb.key, Prefer: "return=minimal" };
@@ -577,8 +594,26 @@
   function safeGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
 
+  /* Home layout chosen in the admin panel: section order and hidden sections (the hero stays first) */
+  if (page === "home" && D.layout) {
+    let after = $(".hero");
+    D.layout.home.forEach((id) => {
+      const el = $(`[data-block="${id}"]`); if (!el || !after) return;
+      after.after(el); after = el;
+      if ((D.layout.hidden || []).includes(id)) el.hidden = true;
+    });
+  }
+
+  /* Demo preview: say so, and offer a way out */
+  if (D.demo) {
+    const b = document.createElement("div");
+    b.className = "demo-banner";
+    b.innerHTML = `<b>Demo preview</b><span>Changes saved in this browser only.</span><a href="admin.html">Admin</a><a href="${location.pathname}?demo=0">Exit</a>`;
+    document.body.appendChild(b);
+  }
+
   if (R[page]) R[page]();
   newsletter();
   observe();
   $$("[data-count]").forEach((el) => countIO.observe(el));
-})();
+});

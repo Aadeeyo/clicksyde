@@ -547,11 +547,11 @@
         ${saved ? "" : `<p>We couldn't send this from the page. Tap below to send it by email${wa ? " or WhatsApp" : ""}, or write to <b>${esc(D.contact.email)}</b>.</p>`}
         <p>Here's what happens next:</p>
         <ol><li>A strategist reads this today and replies within one working day.</li>
-          <li>A 30-minute discovery call to understand your goals.</li>
+          <li>If it looks like a fit, they'll invite you to a 30-minute discovery call.</li>
           <li>A proposal with a plan, timeline and price, within 5 working days.</li></ol>
         <div class="acts">${saved ? "" : `<a class="btn btn-brand" href="${mail}">Send it by email</a>`}
           ${wa && !saved ? `<a class="btn btn-light" href="${wa}" target="_blank" rel="noopener">Send on WhatsApp</a>` : ""}
-          <a class="btn btn-light" href="${D.contact.calendly}">Book the call now</a></div>
+          <a class="btn btn-light" href="work.html">See our work while you wait</a></div>
       </div>`);
       scroll();
     };

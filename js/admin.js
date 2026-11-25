@@ -718,9 +718,7 @@
   }
 
   /* ---------- Boot ---------- */
-  window.CSmarkAdmin = () => `<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="#FF4306" stroke-width="15">
-    <path d="M33.5 15.7A38 38 0 0 1 45 12.3"/><path d="M55 12.3A38 38 0 0 1 66.5 15.7"/><path d="M74 21A38 38 0 0 1 74 79"/><path d="M66.5 84.3A38 38 0 0 1 55 87.7"/>
-    <path d="M45 87.7A38 38 0 0 1 33.5 84.3"/><path d="M26 79A38 38 0 0 1 14 60"/><path d="M14 40A38 38 0 0 1 26 21"/></g><path d="M38 44l23-3-13 20-2-11z" fill="currentColor"/></svg>`;
+  window.CSmarkAdmin = () => window.CSlogo.mark();
 
   const signedInBefore = () => { try { return Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k)); } catch (_) { return false; } };
   if (ss.get("cs-admin-mode") === "demo") start("demo");

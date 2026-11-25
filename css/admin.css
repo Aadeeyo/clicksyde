@@ -6,7 +6,7 @@
 .adm .small { font-size: 13px; }
 .adm .muted { color: var(--muted); }
 :where(.adm) a { color: inherit; }
-.adm .btn { padding: 11px 18px; font-size: 14px; }
+.adm .btn { padding: 12px 18px; font-size: 11.5px; letter-spacing: .14em; }
 .adm .btn[disabled] { opacity: .45; pointer-events: none; }
 .adm .btn.danger { color: #c2410c; }
 .adm :is(.panel, .rows li, .notes-admin li, .drawer-card) .btn-light { box-shadow: inset 0 0 0 1.5px var(--line); }

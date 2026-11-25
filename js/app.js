@@ -20,18 +20,9 @@
     r.setProperty("--brand-soft", `color-mix(in srgb, ${D.theme.brand} 14%, #fff)`);
   }
 
-  /* ---------- Brand mark (approximation of the logo: segmented ring + cursor) ---------- */
-  const mark = (fg = "#FF4306", cursor = "currentColor") => `
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <g fill="none" stroke="${fg}" stroke-width="15">
-        <path d="M33.5 15.7A38 38 0 0 1 45 12.3"/><path d="M55 12.3A38 38 0 0 1 66.5 15.7"/>
-        <path d="M74 21A38 38 0 0 1 74 79"/><path d="M66.5 84.3A38 38 0 0 1 55 87.7"/>
-        <path d="M45 87.7A38 38 0 0 1 33.5 84.3"/><path d="M26 79A38 38 0 0 1 14 60"/>
-        <path d="M14 40A38 38 0 0 1 26 21"/>
-      </g>
-      <path d="M38 44l23-3-13 20-2-11z" fill="${cursor}"/>
-      <g stroke="${cursor}" stroke-width="2.6" stroke-linecap="round"><path d="M57 33l-1-4M63 35l2-4M66 40l4-1M64 46l3 2"/></g>
-    </svg>`;
+  /* ---------- Official Clicksyde logo (js/logo.js, taken from clicksyde.com) ---------- */
+  const mark = (fg = "#FF4306") => window.CSlogo.mark(fg);
+  const logo = (wordFg) => window.CSlogo.full("#FF4306", wordFg);
   window.CSmark = mark;
 
   const icons = {
@@ -49,8 +40,10 @@
   header.className = "site-header";
   header.innerHTML = `
     <div class="wrap">
-      <a class="brand" href="index.html" aria-label="Clicksyde home">${mark()}<span>Clicksyde</span></a>
-      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html"><span class="dot"></span>Let's talk</a>` : `<span class="header-cta"></span>`}
+      <a class="brand" href="index.html" aria-label="Clicksyde home">${logo()}</a>
+      <nav class="main-nav" aria-label="Main">${chapters.filter((c) => c.id !== "home" && c.id !== "talk").map((c) =>
+        `<a href="${c.href}" ${c.id === page ? 'aria-current="page"' : ""}>${esc(c.label)}</a>`).join("")}</nav>
+      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html">Enquire</a>` : `<span class="header-cta"></span>`}
       <button class="menu-btn" aria-label="Open the story menu" aria-expanded="false" aria-controls="story-menu"><span></span></button>
     </div>
     <div class="progress" aria-hidden="true"></div>`;
@@ -60,7 +53,7 @@
   const menu = document.createElement("nav");
   menu.className = "story-menu"; menu.id = "story-menu"; menu.setAttribute("aria-label", "Menu");
   menu.innerHTML = `
-    <div class="top"><a class="brand" href="index.html" style="color:#fff">${mark("#FF4306", "#fff")}<span>Clicksyde</span></a>
+    <div class="top"><a class="brand" href="index.html" aria-label="Clicksyde home" style="color:var(--ivory)">${logo()}</a>
       <button class="close" aria-label="Close menu">✕</button></div>
     <ol>${chapters.map((c) => `
       <li><a href="${c.href}" ${c.id === page ? 'aria-current="page"' : ""}>
@@ -68,7 +61,7 @@
         <span class="q">${esc(c.q)}</span></a></li>`).join("")}
     </ol>
     <div class="menu-foot">
-      <a class="btn btn-brand" href="start.html">Let's talk <span class="arr">→</span></a>
+      <a class="btn btn-light" href="start.html">Enquire <span class="arr">→</span></a>
       <a class="btn btn-ghost" href="mailto:${D.contact.email}">${D.contact.email}</a>
     </div>`;
   document.body.appendChild(menu);
@@ -82,13 +75,6 @@
   menuBtn.addEventListener("click", () => setMenu(true));
   $(".close", menu).addEventListener("click", () => setMenu(false));
 
-  /* ---------- Dock ---------- */
-  const dock = document.createElement("nav");
-  dock.className = "dock"; dock.setAttribute("aria-label", "Main");
-  dock.innerHTML = chapters.map((c) => `
-    <a href="${c.href}" class="${c.id === "talk" ? "go" : ""}" ${c.id === page ? 'aria-current="page"' : ""} aria-label="${esc(c.label)}" title="${esc(c.label)}">
-      ${icons[c.id]}<span class="lbl">${esc(c.label)}</span></a>`).join("");
-  document.body.appendChild(dock);
 
   /* ---------- Turn the page: every chapter ends by pointing to the next one ---------- */
   const main = $("main");
@@ -110,8 +96,8 @@
   footer.className = "site-footer";
   footer.innerHTML = `<div class="wrap">
     <div class="cols">
-      <div><a class="brand" href="index.html">${mark()}<span>Clicksyde</span></a>
-        <p class="muted" style="max-width:32ch;margin-top:14px">We make brands impossible to overlook.</p></div>
+      <div><a class="brand" href="index.html" aria-label="Clicksyde home">${logo()}</a>
+        <p class="muted" style="max-width:32ch;margin-top:18px">PR &amp; digital agency. We make brands impossible to overlook.</p></div>
       <div><h4>Explore</h4><ul>${chapters.map((c) => `<li><a href="${c.href}">${esc(c.title)}</a></li>`).join("")}</ul></div>
       <div><h4>Start</h4><ul>
         <li><a href="start.html">Request a proposal</a></li>
@@ -120,7 +106,7 @@
         ${[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["x", "X"], ["tiktok", "TikTok"]].map(([k, t]) =>
           `<li><a href="${esc(D.contact[k])}" target="_blank" rel="noopener">${t}</a></li>`).join("")}</ul></div>
     </div>
-    <div class="legal"><span>© ${new Date().getFullYear()} Clicksyde. All rights reserved.</span><span>Made with too much coffee in Lagos.</span></div>
+    <div class="legal"><span>© ${new Date().getFullYear()} Clicksyde. All rights reserved.</span><span>Lagos, Nigeria</span></div>
   </div>`;
   document.body.appendChild(footer);
 
@@ -166,20 +152,10 @@
 
   /* ----- 01 HOME ----- */
   R.home = () => {
-    // Reel: use assets/reel.mp4 if present, otherwise the drifting frame wall
-    const reel = $(".hero-reel");
-    const cols = window.innerWidth >= 900 ? 5 : 3;
-    let wall = '<div class="reel-wall" aria-hidden="true">';
-    for (let c = 0; c < cols; c++) {
-      const frames = D.reel.slice(c * 2).concat(D.reel.slice(0, c * 2)).slice(0, 5);
-      const list = frames.concat(frames); // doubled for a seamless loop
-      wall += `<div class="reel-col" style="animation-delay:${-c * 7}s">${list.map(([col, cap]) =>
-        `<div class="frame" style="background:linear-gradient(160deg, ${col}, ${col}cc 60%, #161616)"><span>${esc(cap)}</span></div>`).join("")}</div>`;
-    }
-    reel.insertAdjacentHTML("afterbegin", wall + "</div>");
-    const v = $("video", reel);
+    // Reel: assets/reel.mp4 plays over the hero photograph once it exists; until then the photograph shows.
+    const v = $(".hero-media video");
     if (v) {
-      v.addEventListener("loadeddata", () => { $(".reel-wall", reel).remove(); }, { once: true });
+      v.addEventListener("loadeddata", () => v.classList.add("on"), { once: true });
       v.addEventListener("error", () => v.remove(), true);
       $$("source", v).forEach((s) => s.addEventListener("error", () => v.remove()));
     }
@@ -303,8 +279,8 @@
         </div>
         <div class="case-body">
           <div class="byline">
-            <div class="avatars"><span>${mark("#fff", "#fff")}</span><span style="background:${c.color}">${esc(c.initials)}</span></div>
-            <div><b>clicksyde</b><span class="verified" aria-label="verified">✓</span><span class="with">with</span> <b>${esc(c.client)}</b>
+            <div class="avatars"><span>${mark()}</span><span style="background:${c.color}">${esc(c.initials)}</span></div>
+            <div><b>Clicksyde</b> <span class="with">with</span> <b>${esc(c.client)}</b>
               <div class="meta">${c.tags.map(esc).join(" · ")}</div></div>
           </div>
           <h2>${esc(c.title)}</h2><p class="sub">${esc(c.sub)}</p>
@@ -313,12 +289,12 @@
           <div class="story" id="story-${ci}"><div>${c.story.map(([h, p]) => `<div class="chunk"><h4>${esc(h)}</h4><p>${esc(p)}</p></div>`).join("")}</div></div>
         </div>
         <div class="thread" aria-label="Client feedback">
-          <div class="th-head"><span>💬 ${c.comments.length} ${c.comments.length === 1 ? "comment" : "comments"} from the client</span><span>Most relevant ▾</span></div>
+          <div class="th-head"><span>In the client's words</span></div>
           ${c.comments.map((m, mi) => {
             const key = c.id + mi, on = liked.has(key);
             return `<div class="comment ${m.reply ? "reply" : ""}">
-              <div class="av" style="background:${m.brand ? "var(--brand)" : m.color}">${m.brand ? mark("#fff", "#fff") : esc(m.initials)}</div>
-              <div><div class="who"><b>${esc(m.who)}</b><span class="role">${esc(m.role)}</span>${m.pinned ? '<span class="pin">📌 Pinned</span>' : ""}</div>
+              <div class="av" style="background:${m.brand ? "var(--brand)" : m.color}">${m.brand ? mark() : esc(m.initials)}</div>
+              <div><div class="who"><b>${esc(m.who)}</b><span class="role">${esc(m.role)}</span>${m.pinned ? '<span class="pin">Client</span>' : ""}</div>
                 <p class="said">${esc(m.said)}</p>
                 <button class="like" data-key="${key}" data-n="${m.likes}" aria-pressed="${on}">${icons.heart}<span>${on ? m.likes + 1 : m.likes}</span> Like</button></div>
             </div>`; }).join("")}
@@ -424,7 +400,7 @@
       const saved = await save("subscribers", { email: email.toLowerCase(), source: location.pathname });
       btn.disabled = false;
       if (!saved) { note.textContent = "Sign-ups aren't open yet. Please try again soon."; return; }
-      form.innerHTML = `<span style="padding:12px 16px;color:var(--ink);font-weight:600">You're on the list. First issue lands soon ✉️</span>`;
+      form.innerHTML = `<span style="padding:12px 16px;color:var(--ink);font-weight:600">You're on the list. The first issue is on its way.</span>`;
       note.textContent = "";
     });
   }
@@ -462,7 +438,7 @@
     const params = new URLSearchParams(location.search);
     const pre = D.services.find((s) => s.id === params.get("service"));
     const ans = { need: [], budget: "", when: "", name: "", business: "", contact: "", about: "", service: pre ? pre.t : "" };
-    $("[data-mark]").innerHTML = mark("#fff", "#fff");
+    $("[data-mark]").innerHTML = mark();
     $("[data-mail]").href = "mailto:" + D.contact.email;
     $("[data-mail-text]").textContent = D.contact.email;
     const body = $(".convo-body");
@@ -478,7 +454,7 @@
 
     const render = (from) => {
       body.innerHTML = "";
-      say(`Hey 👋 We'll keep this short: <b>4 quick questions</b>, about a minute.${pre ? ` We see you're interested in <b>${esc(pre.t)}</b>.` : ""}`);
+      say(`Welcome. Four short questions, about a minute.${pre ? ` We see you're interested in <b>${esc(pre.t)}</b>.` : ""}`);
       for (let i = 0; i < steps.length; i++) {
         if (i < from) { ask(i, true); continue; }
         ask(i, false); break;
@@ -560,7 +536,7 @@
       const wa = D.contact.whatsapp ? `https://wa.me/${D.contact.whatsapp}?text=${encodeURIComponent(summary)}` : "";
       const mail = `mailto:${D.contact.email}?subject=${encodeURIComponent("New project: " + ans.business)}&body=${encodeURIComponent(summary)}`;
       body.insertAdjacentHTML("beforeend", `<div class="done-card">
-        <h3>${saved ? `Got it, ${esc(ans.name.split(" ")[0])} 🎉` : `Almost there, ${esc(ans.name.split(" ")[0])}`}</h3>
+        <h3>${saved ? `Thank you, ${esc(ans.name.split(" ")[0])}.` : `Almost there, ${esc(ans.name.split(" ")[0])}`}</h3>
         ${saved ? "" : `<p>We couldn't send this from the page. Tap below to send it by email${wa ? " or WhatsApp" : ""}, or write to <b>${esc(D.contact.email)}</b>.</p>`}
         <p>Here's what happens next:</p>
         <ol><li>A strategist reads this today and replies within one working day.</li>

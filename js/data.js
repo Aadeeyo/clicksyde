@@ -21,12 +21,12 @@ window.CS = {
   /* The pages, in reading order. Each answers one visitor question (q, shown in the menu).
      stage is the funnel stage for the team's reference only; it is not shown on the site. */
   chapters: [
-    { id: "home",     href: "index.html",    title: "Hello",        label: "Home",     stage: "Understand", q: "What does Clicksyde do, and is it for me?" },
-    { id: "wall",     href: "services.html", title: "The Wall",     label: "Services", stage: "Explore",    q: "Which of your services solves my problem?" },
-    { id: "work",     href: "work.html",     title: "Receipts",     label: "Work",     stage: "Trust",      q: "Can you actually deliver?" },
+    { id: "home",     href: "index.html",    title: "Home",         label: "Home",     stage: "Understand", q: "What does Clicksyde do, and is it for me?" },
+    { id: "wall",     href: "services.html", title: "Services",     label: "Services", stage: "Explore",    q: "Which of your services solves my problem?" },
+    { id: "work",     href: "work.html",     title: "Work",         label: "Work",     stage: "Trust",      q: "Can you actually deliver?" },
     { id: "insights", href: "insights.html", title: "Insights",     label: "Insights", stage: "Grow",       q: "What do you know that I don't?" },
-    { id: "about",    href: "about.html",    title: "Still curious?", label: "About",  stage: "Connect",    q: "Who are the people behind this?" },
-    { id: "talk",     href: "start.html",    title: "Let's talk",   label: "Let's talk", stage: "Convert",  q: "How do we start?" }
+    { id: "about",    href: "about.html",    title: "About",        label: "About",  stage: "Connect",    q: "Who are the people behind this?" },
+    { id: "talk",     href: "start.html",    title: "Contact",      label: "Contact", stage: "Convert",  q: "How do we start?" }
   ],
 
   /* Home page sections, in order. The admin panel can reorder and hide them (hero always comes first). */
@@ -35,13 +35,13 @@ window.CS = {
 
   /* Logo slideshow: brands Clicksyde has worked with. logo = file in assets/clients/; without one, the name shows as text. */
   clients: [
-    { n: "Domino's Pizza", logo: "dominos.svg" },
-    { n: "KFC", logo: "kfc.svg" },
-    { n: "Airtel", logo: "airtel.svg" },
-    { n: "Access Bank", logo: "access-bank.png" },
-    { n: "Cold Stone Creamery", logo: "cold-stone.svg" },
-    { n: "pieXpress" },  // PLACEHOLDER: add assets/clients/piexpress.svg (or .png) and set logo
-    { n: "i-Fitness" }   // PLACEHOLDER: add assets/clients/i-fitness.svg (or .png) and set logo
+    { n: "Domino's Pizza", logo: "dominos.webp" },
+    { n: "KFC", logo: "kfc.webp" },
+    { n: "Airtel", logo: "airtel.webp" },
+    { n: "Access Bank", logo: "access-bank.webp" },
+    { n: "pieXpress", logo: "piexpress.webp" },
+    { n: "i-Fitness", logo: "i-fitness.webp" },
+    { n: "Cold Stone Creamery", logo: "cold-stone.webp" }
   ],
 
   /* Hero reel fallback frames (shown until assets/reel.mp4 exists) */
@@ -137,7 +137,7 @@ window.CS = {
         { who: "Domino's Pizza", role: "Head of Marketing", pinned: true, likes: 48, color: "#006491", initials: "D",
           said: "Clicksyde understood the vision and knew exactly how to position it. The result was bigger visibility, stronger conversations, and a brand that felt impossible to overlook." },
         { who: "Clicksyde", role: "Replying", reply: true, likes: 12, brand: true,
-          said: "We see every project as more than just marketing. It's a partnership founded on trust, shaped by creativity, and powered by ambition. Thanks for trusting us with this one 🍕" }
+          said: "We see every project as more than just marketing. It's a partnership founded on trust, shaped by creativity, and powered by ambition. Thank you for trusting us with it." }
       ]
     },
     {
@@ -231,6 +231,6 @@ window.CS = {
   questions: {
     need: ["Get more people to know us", "Turn attention into sales", "Content that looks premium", "Launch something new", "A full marketing team", "Not sure yet, help me figure it out"],
     budget: ["Under ₦500k / month", "₦500k – ₦2m / month", "₦2m – ₦5m / month", "₦5m+ / month", "One-off project", "Rather discuss on a call"],
-    when: ["Yesterday 🔥", "This month", "Next 1–3 months", "Just exploring"]
+    when: ["As soon as possible", "This month", "Next 1–3 months", "Just exploring"]
   }
 };

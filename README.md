@@ -21,12 +21,16 @@ Each page is a **chapter** that answers one question a prospective client has. E
 
 ## What's on each page
 
-- **Home**: split hero over a campaign reel, a logo slideshow, the message in one sentence (it lights up as you scroll), *Be seen / Be chosen / Be remembered*, an "Is this for me?" checklist, headline numbers and the client journey.
-- **The Wall**: nine services as sticky notes on a pink wall. Tap a note and it opens into a full explanation (what you get, who it's for, "I need this" goes to the form with that service filled in). Problem chips and a problem finder light up the notes that fix a given problem. Notes can be linked directly, e.g. `services.html#ads`.
-- **Receipts**: a feed of case studies (image carousel, "clicksyde ✓ with Client" byline, stat tiles, expandable story). The client's feedback sits right under each case study as a social-media-style comment thread, with a pinned comment, a Clicksyde reply and like buttons.
+- **Home**: editorial split hero (headline beside a campaign photograph), the client logo strip, the message in one sentence (it lights up as you scroll), *Be seen / Be chosen / Be remembered*, an "Is this for me?" checklist, headline numbers and the client journey.
+- **Services**: the services as a numbered index. Select one and it opens into a full explanation (what you get, who it's for; "I need this" goes to the form with that service filled in). Problem filters and a problem finder highlight the services that fix a given problem. Services can be linked directly, e.g. `services.html#ads`.
+- **Work**: case studies (image carousel, "Clicksyde with Client" byline, results, expandable story), each followed by the client's testimonial and Clicksyde's reply.
 - **Insights**: featured article, category filters, article cards that open in a full-screen reader, and the newsletter sign-up (*The Syde Note*).
 - **Still curious?**: opens with the "you're still curious? Like what exactly?" line, flip cards (favourite food, colour…), the origin story, values and the team.
 - **Let's talk**: 4 short questions asked as a chat (what you need → who you are + an optional one-liner → budget & timeline → how to reach you), editable answers, then a "what happens next" card.
+
+## Look and feel
+
+Quiet, editorial and premium, deliberately unlike the Bvndle / BRF sites: Cormorant Garamond for headlines, Hanken Grotesk for text, small spaced capitals for labels, gallery white and near-black with Clicksyde orange used sparingly, square corners, hairline rules instead of shadows, and a classic text navigation (no floating dock). Campaign photography in `assets/img/` comes from clicksyde.com.
 
 ## Editing content
 
@@ -42,7 +46,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Leads | Every "Let's talk" submission; filter by status, open one to email/WhatsApp/call them, set the status (new → contacted → call booked → proposal sent → won / lost), add team notes, export CSV |
 | Newsletter | The Syde Note sign-ups; unsubscribe / resubscribe, export the active list as CSV |
 | Blog | Write, edit, publish, unpublish, feature and delete Insights articles, with a cover colour, cover text or uploaded cover image |
-| Services | Add, edit, reorder and delete the sticky notes on The Wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
+| Services | Add, edit, reorder and delete services (name, one-liner, description, what you get, great for, accent colour) and choose which problems in the problem finder each one fixes |
 | Client logos | Add, rename, reorder and remove brands in the home page slideshow, and upload their logos |
 | Contact & social | Lead inbox, WhatsApp number and the Instagram / LinkedIn / X / TikTok links |
 | Layout & brand | Show, hide and reorder the home page sections (the hero stays first) and change the brand colour |
@@ -62,8 +66,8 @@ Not in the admin yet (still edited in `js/data.js`): case studies and comments, 
 
 ## To add before launch
 
-1. **Hero video**: put the campaign mashup at `assets/reel.mp4` (muted, about 15–30s, under 8MB). It replaces the animated frame wall automatically.
-2. **Client logos**: logos live in `assets/clients/` and are listed in `clients` in `js/data.js`. Domino's, Airtel, Access Bank, KFC and Cold Stone came from Wikimedia Commons / Wikipedia; swap in the brands' official files if you have them. pieXpress and i-Fitness still show as text until their logo files are added.
+1. **Hero video** (optional): put a campaign mashup at `assets/reel.mp4` (muted, about 15–30s, under 8MB). It fades in over the hero photograph automatically.
+2. **Client logos**: the official logo files from clicksyde.com are in `assets/clients/` and listed in `clients` in `js/data.js` (or managed in the admin).
 3. **Contact settings** in `js/data.js → contact`: the real inbox and WhatsApp number (social links are set to the @clicksyde accounts).
 4. **Where leads go**: form answers and newsletter sign-ups are saved to the Clicksyde Supabase project (`https://jcwekuxjhcceqprefudc.supabase.co`). To switch it on:
    1. In Supabase, open **SQL Editor**, paste in `supabase/migrations/20261125000000_clicksyde_leads.sql` and run it. This creates the `leads` and `subscribers` tables. Visitors can only add rows; only admins can read them.
@@ -72,4 +76,4 @@ Not in the admin yet (still edited in `js/data.js`): case studies and comments, 
 
    Until the key is set, the form still works: the confirmation card asks the visitor to send their answers by email or WhatsApp, and the newsletter says sign-ups aren't open yet.
 5. **Real case studies and client-approved testimonials** (cases 2 and 3 are placeholders), photos for the carousels, team photos and the real origin story.
-6. **Logo**: the header uses an SVG approximation of the mark. Drop in the official SVG when available.
+6. **Logo**: the official Clicksyde logo from clicksyde.com is in `js/logo.js` (used across the site and admin), with files in `assets/logo.svg`, `assets/logo-white.svg` and `assets/favicon.svg`.

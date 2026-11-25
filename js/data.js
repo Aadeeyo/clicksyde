@@ -5,7 +5,6 @@ window.CS = {
   contact: {
     email: "hello@clicksyde.com",          // PLACEHOLDER: confirm the inbox leads should go to
     whatsapp: "",                          // PLACEHOLDER: business WhatsApp number in international format, digits only (e.g. 2347000000000)
-    calendly: "#",                         // PLACEHOLDER: discovery-call booking link (Calendly, Cal.com, Google appointment page)
     instagram: "#", linkedin: "#", x: "#", tiktok: "#",
   },
 
@@ -18,14 +17,15 @@ window.CS = {
     key: "sb_publishable_Bu3WBDBC2YCVlThNQFE-IQ_WLCXAQxr"
   },
 
-  /* The storybook: each page is a chapter answering one visitor question */
+  /* The pages, in reading order. Each answers one visitor question (q, shown in the menu).
+     stage is the funnel stage for the team's reference only; it is not shown on the site. */
   chapters: [
-    { id: "home",     href: "index.html",    n: "01", title: "Hello",        label: "Home",     stage: "Understand", q: "What does Clicksyde do, and is it for me?" },
-    { id: "wall",     href: "services.html", n: "02", title: "The Wall",     label: "Services", stage: "Explore",    q: "Which of your services solves my problem?" },
-    { id: "work",     href: "work.html",     n: "03", title: "Receipts",     label: "Work",     stage: "Trust",      q: "Can you actually deliver?" },
-    { id: "insights", href: "insights.html", n: "04", title: "Insights",     label: "Insights", stage: "Grow",       q: "What do you know that I don't?" },
-    { id: "about",    href: "about.html",    n: "05", title: "Still curious?", label: "About",  stage: "Connect",    q: "Who are the people behind this?" },
-    { id: "talk",     href: "start.html",    n: "06", title: "Let's talk",   label: "Let's talk", stage: "Convert",  q: "How do we start?" }
+    { id: "home",     href: "index.html",    title: "Hello",        label: "Home",     stage: "Understand", q: "What does Clicksyde do, and is it for me?" },
+    { id: "wall",     href: "services.html", title: "The Wall",     label: "Services", stage: "Explore",    q: "Which of your services solves my problem?" },
+    { id: "work",     href: "work.html",     title: "Receipts",     label: "Work",     stage: "Trust",      q: "Can you actually deliver?" },
+    { id: "insights", href: "insights.html", title: "Insights",     label: "Insights", stage: "Grow",       q: "What do you know that I don't?" },
+    { id: "about",    href: "about.html",    title: "Still curious?", label: "About",  stage: "Connect",    q: "Who are the people behind this?" },
+    { id: "talk",     href: "start.html",    title: "Let's talk",   label: "Let's talk", stage: "Convert",  q: "How do we start?" }
   ],
 
   /* Logo slideshow (text wordmarks until logo files are added to assets/clients/) */

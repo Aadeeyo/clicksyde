@@ -42,7 +42,6 @@
   header.innerHTML = `
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Clicksyde home">${mark()}<span>Clicksyde</span></a>
-      ${current ? `<span class="chapter-tag">Chapter ${current.n} · <b>${esc(current.title)}</b></span>` : ""}
       ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html"><span class="dot"></span>Let's talk</a>` : `<span class="header-cta"></span>`}
       <button class="menu-btn" aria-label="Open the story menu" aria-expanded="false" aria-controls="story-menu"><span></span></button>
     </div>
@@ -51,17 +50,17 @@
 
   /* ---------- Story menu: the table of contents of the storybook ---------- */
   const menu = document.createElement("nav");
-  menu.className = "story-menu"; menu.id = "story-menu"; menu.setAttribute("aria-label", "Chapters");
+  menu.className = "story-menu"; menu.id = "story-menu"; menu.setAttribute("aria-label", "Menu");
   menu.innerHTML = `
     <div class="top"><a class="brand" href="index.html" style="color:#fff">${mark("#FF4306", "#fff")}<span>Clicksyde</span></a>
       <button class="close" aria-label="Close menu">✕</button></div>
     <ol>${chapters.map((c) => `
       <li><a href="${c.href}" ${c.id === page ? 'aria-current="page"' : ""}>
-        <span class="num">${c.n}</span><span class="t">${esc(c.title)}</span><span class="num">${esc(c.stage)}</span>
+        <span class="t">${esc(c.title)}</span>
         <span class="q">${esc(c.q)}</span></a></li>`).join("")}
     </ol>
     <div class="menu-foot">
-      <a class="btn btn-brand" href="start.html">Book a discovery call <span class="arr">→</span></a>
+      <a class="btn btn-brand" href="start.html">Let's talk <span class="arr">→</span></a>
       <a class="btn btn-ghost" href="mailto:${D.contact.email}">${D.contact.email}</a>
     </div>`;
   document.body.appendChild(menu);
@@ -92,7 +91,7 @@
     const turn = document.createElement("section");
     turn.className = "turn";
     turn.innerHTML = `<div class="wrap"><a href="${next.href}">
-      <div><div class="k">Turn the page · Chapter ${next.n}</div>
+      <div><div class="k">Up next</div>
       <div class="t">${esc(next.title)}</div><p class="s">${esc(line)}</p></div>
       <span class="circle" aria-hidden="true">→</span></a></div>`;
     main.appendChild(turn);
@@ -105,9 +104,8 @@
     <div class="cols">
       <div><a class="brand" href="index.html">${mark()}<span>Clicksyde</span></a>
         <p class="muted" style="max-width:32ch;margin-top:14px">We make brands impossible to overlook.</p></div>
-      <div><h4>The story</h4><ul>${chapters.map((c) => `<li><a href="${c.href}">${c.n} ${esc(c.title)}</a></li>`).join("")}</ul></div>
+      <div><h4>Explore</h4><ul>${chapters.map((c) => `<li><a href="${c.href}">${esc(c.title)}</a></li>`).join("")}</ul></div>
       <div><h4>Start</h4><ul>
-        <li><a href="start.html#call">Book a discovery call</a></li>
         <li><a href="start.html">Request a proposal</a></li>
         <li><a href="mailto:${D.contact.email}">${D.contact.email}</a></li></ul></div>
       <div><h4>Follow</h4><ul>
@@ -445,7 +443,6 @@
     const pre = D.services.find((s) => s.id === params.get("service"));
     const ans = { need: [], budget: "", when: "", name: "", business: "", contact: "", about: "", service: pre ? pre.t : "" };
     $("[data-mark]").innerHTML = mark("#fff", "#fff");
-    $("[data-cal]").href = D.contact.calendly;
     $("[data-mail]").href = "mailto:" + D.contact.email;
     $("[data-mail-text]").textContent = D.contact.email;
     const body = $(".convo-body");

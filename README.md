@@ -4,7 +4,7 @@ A plain static site with no build step. Open `index.html` through any local serv
 
 ## The idea: a digital storybook
 
-Each page is a **chapter** that answers one question a prospective client has. Every chapter ends with a big **"Turn the page"** card that leads to the next one, so a visitor is always one tap from the next step. They can also jump around with the bottom dock or the full-screen chapter menu (☰).
+Each page is a **chapter** that answers one question a prospective client has. Every page ends with a big **"Up next"** card that leads to the next one, so a visitor is always one tap from the next step. They can also jump around with the bottom dock or the full-screen menu (☰). Chapter numbers and funnel stages are for planning only and are not shown on the site.
 
 | # | Page | File | Stage | Visitor's question |
 |---|------|------|-------|--------------------|
@@ -15,7 +15,7 @@ Each page is a **chapter** that answers one question a prospective client has. E
 | 05 | Still curious? (About) | `about.html` | Connect | Who's behind this? |
 | 06 | Let's talk | `start.html` | Convert | How do we start? |
 
-"Let's talk" (the conversion layer) can be reached from every page: the header button, the orange dock button, every "Turn the page" card, the end of every case study, every opened sticky note and every article.
+"Let's talk" (the conversion layer) can be reached from every page: the header button, the orange dock button, every "Up next" card, the end of every case study, every opened sticky note and every article.
 
 **Retain & grow** is covered on the home page ("What happens after you say hi": Discover → Onboard → Deliver → Grow) and on the confirmation card after the form.
 
@@ -36,7 +36,7 @@ All copy lives in `js/data.js`: services, case studies, comments, articles, fun 
 
 1. **Hero video**: put the campaign mashup at `assets/reel.mp4` (muted, about 15–30s, under 8MB). It replaces the animated frame wall automatically.
 2. **Client logos**: the slideshow uses text names in `clients`. Swap in logo images if you prefer.
-3. **Contact settings** in `js/data.js → contact`: the real inbox, WhatsApp number, booking link and social links.
+3. **Contact settings** in `js/data.js → contact`: the real inbox, WhatsApp number and social links.
 4. **Where leads go**: form answers and newsletter sign-ups are saved to the Clicksyde Supabase project (`https://jcwekuxjhcceqprefudc.supabase.co`). To switch it on:
    1. In Supabase, open **SQL Editor**, paste in `supabase/migrations/20261125000000_clicksyde_leads.sql` and run it. This creates the `leads` and `subscribers` tables. Visitors can only add rows; only admins can read them.
    2. Copy the **publishable key** (Project Settings → API Keys, starts with `sb_publishable_`) into `supabase.key` in `js/data.js`. Never use the secret or service_role key.

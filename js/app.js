@@ -177,8 +177,10 @@
     }
 
     // Logo slideshow
-    const names = D.clients.map((n) => `<span>${esc(n)}</span>`).join("");
-    $(".marquee-track").innerHTML = names + names;
+    // The track scrolls by half its width, so each half must be wider than the widest screen: repeat short lists.
+    const one = D.clients.map((n) => `<span>${esc(n)}</span>`).join("");
+    const half = one.repeat(Math.max(1, Math.ceil(12 / D.clients.length)));
+    $(".marquee-track").innerHTML = half + half;
 
     // One-liner lights up word by word as you scroll past it
     const ol = $(".oneliner p");

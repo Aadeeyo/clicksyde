@@ -29,7 +29,7 @@ window.CS = {
   ],
 
   /* Logo slideshow (text wordmarks until logo files are added to assets/clients/) */
-  clients: ["Domino's Pizza", "PLACEHOLDER Brand", "Client Two", "Client Three", "Client Four", "Client Five", "Client Six", "Client Seven"],
+  clients: ["Domino's Pizza", "KFC", "Airtel", "Cold Stone Creamery", "pieXpress", "i-Fitness"], // PLACEHOLDER: add the brand with the orange diamond logo
 
   /* Hero reel fallback frames (shown until assets/reel.mp4 exists) */
   reel: [

@@ -51,7 +51,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
 | Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |
-| Client logos | Add, rename, reorder and remove brands in the home page slideshow, and upload their logos |
+| Client logos | Add (one at a time or several at once), rename, reorder and remove brands in the "Trusted by" strip; set the overall logo size (Small to Extra large) and zoom any single logo whose file has a lot of empty space around it |
 | Contact & social | Lead inbox, WhatsApp number and the Instagram / LinkedIn / X / TikTok links |
 | Layout & brand | Show, hide and reorder the home page sections (the hero stays first) and change the brand colour |
 

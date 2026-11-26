@@ -240,8 +240,9 @@
     // Logo slideshow
     // The track scrolls by half its width, so each half must be wider than the widest screen: repeat short lists.
     if (D.clients.length) {
+      $(".marquee").classList.add("size-" + (D.logoSize || "m"));
       const one = D.clients.map((c) => c.src
-        ? `<img src="${esc(c.src)}" alt="${esc(c.n)}" loading="lazy">`
+        ? `<img src="${esc(c.src)}" alt="${esc(c.n)}" loading="lazy" style="--s:${c.scale || 1}">`
         : `<span>${esc(c.n)}</span>`).join("");
       const half = one.repeat(Math.max(1, Math.ceil(12 / D.clients.length)));
       $(".marquee-track").innerHTML = half + half;

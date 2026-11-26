@@ -72,6 +72,7 @@
       },
       team: Array.isArray(d.team) ? d.team : clone(D0.team),
       cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
+      logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
       postsManaged: !!d.postsManaged
     };
   };
@@ -922,25 +923,38 @@
   }
 
   /* ---------- Client logos ---------- */
+  const LOGO_SIZES = [["s", "Small"], ["m", "Medium"], ["l", "Large"], ["xl", "Extra large"]];
   async function clients() {
     const site = await api.getSite();
     let list = clone(site.clients);
+    let size = ["s", "m", "l", "xl"].includes(site.logoSize) ? site.logoSize : "m";
+    const pct = (c) => Math.round((Number(c.scale) || 1) * 100);
+    const preview = () => `<div class="strip marquee size-${size}">${list.map((c) => { const src = S.imgSrc(c.logo, true); return src ? `<img src="${esc(src)}" alt="${esc(c.n)}" style="--s:${(Number(c.scale) || 1)}">` : `<span>${esc(c.n || "Brand")}</span>`; }).join("")}</div>`;
     const draw = () => {
-      view().innerHTML = head("Client logos", "Brands in the slideshow on the home page, in this order. Brands without a logo show as text.",
+      view().innerHTML = head("Client logos", "Brands in the “Trusted by” strip on the home page, in this order. Brands without a logo show as text.",
         `${siteLink("index.html")}<button class="btn btn-brand" data-save>Save</button>`) + `
-        <div class="strip">${list.map((c) => { const src = S.imgSrc(c.logo, true); return src ? `<img src="${esc(src)}" alt="${esc(c.n)}">` : `<span>${esc(c.n || "Brand")}</span>`; }).join("")}</div>
+        <div class="panel"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Logo size</h3>
+          <div class="seg" role="group" aria-label="Logo size">${LOGO_SIZES.map(([k, l]) => `<button class="seg-btn" data-size="${k}" aria-pressed="${k === size}">${l}</button>`).join("")}</div></div>
+          <p class="small muted" style="margin:0">Sets the size of every logo in the strip. If one logo still looks small (its file has a lot of empty space around it), use its own size slider below.</p>
+          <div class="strip-wrap">${preview()}</div></div>
         <ul class="rows">${list.map((c, i) => { const src = S.imgSrc(c.logo, true); return `<li data-i="${i}">
           <div class="logo-box">${src ? `<img src="${esc(src)}" alt="">` : `<span class="muted small">No logo</span>`}</div>
           <label class="grow">Brand name<input value="${esc(c.n)}" maxlength="80" data-name></label>
+          <label class="logo-scale">Size <output>${pct(c)}%</output><input type="range" min="50" max="250" step="10" value="${pct(c)}" data-scale ${src ? "" : "disabled"}></label>
           <label class="btn btn-light file">${src ? "Replace logo" : "Upload logo"}<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden data-file></label>
           ${src ? `<button class="linkish" data-nologo>Remove logo</button>` : ""}
           <div class="moves"><button class="icon-btn" data-up aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn" data-down aria-label="Move down" ${i === list.length - 1 ? "disabled" : ""}>↓</button><button class="icon-btn danger" data-rm aria-label="Remove ${esc(c.n)}">✕</button></div>
         </li>`; }).join("")}</ul>
-        <button class="btn btn-light" data-add>+ Add a brand</button>
-        <p class="small muted">Tip: logos on a transparent background, at least 200px wide, look best. ${mode === "demo" ? "In demo mode logos must be under 400 KB." : "Up to 5 MB each."}</p>`;
+        <div class="row"><button class="btn btn-light" data-add>+ Add a brand</button><label class="btn btn-light file">Add several logos<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" multiple hidden data-many></label></div>
+        <p class="small muted">Tip: logos on a transparent background, cropped close to the mark and at least 300px wide, look best. ${mode === "demo" ? "In demo mode logos must be under 400 KB." : "Up to 5 MB each."}</p>`;
       $$("li[data-i]").forEach((li) => {
         const i = +li.dataset.i;
         $("[data-name]", li).oninput = (e) => { list[i].n = e.target.value; };
+        $("[data-scale]", li).oninput = (e) => {
+          list[i].scale = +e.target.value / 100;
+          $("output", li).textContent = e.target.value + "%";
+          $(".strip-wrap").innerHTML = preview();
+        };
         $("[data-file]", li).onchange = async (e) => {
           const file = e.target.files[0]; if (!file) return;
           try { list[i].logo = await api.upload(file, "clients"); draw(); toast("Logo added. Save to put it on the site."); } catch (err) { fail(err); }
@@ -951,9 +965,22 @@
         $("[data-rm]", li).onclick = () => { list.splice(i, 1); draw(); };
       });
       $("[data-add]").onclick = () => { list.push({ n: "" }); draw(); $$("[data-name]").pop().focus(); };
+      $$("[data-size]").forEach((b) => (b.onclick = () => { size = b.dataset.size; $$("[data-size]").forEach((x) => x.setAttribute("aria-pressed", x === b)); $(".strip-wrap").innerHTML = preview(); }));
+      $("[data-many]").onchange = async (e) => {
+        const files = Array.from(e.target.files); let added = 0;
+        for (const file of files) {
+          try {
+            const logo = await api.upload(file, "clients");
+            const n = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()).trim();
+            list.push({ n: n || "New brand", logo }); added++;
+          } catch (err) { fail(err); }
+        }
+        draw();
+        if (added) toast(`${added} logo${added === 1 ? "" : "s"} added. Check the names, then Save.`);
+      };
       $("[data-save]").onclick = async () => {
         list = list.map((c) => Object.assign(c, { n: c.n.trim() })).filter((c) => c.n);
-        try { await api.saveSite(Object.assign(site, { clients: list })); toast("Client logos saved."); draw(); } catch (err) { fail(err); }
+        try { await api.saveSite(Object.assign(site, { clients: list, logoSize: size })); toast("Client logos saved."); draw(); } catch (err) { fail(err); }
       };
     };
     draw();

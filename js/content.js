@@ -36,6 +36,7 @@
     if (allowDemo && /^idb:[\w-]{6,40}$/.test(u)) return u;
     return imgSrc(u, allowDemo);
   };
+  const logoScale = (v) => Math.min(2.5, Math.max(0.5, Number(v) || 1));
   const plain = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 
   /* Demo-mode uploads too big for localStorage (videos) live in IndexedDB; "idb:<id>" refers to one. */
@@ -133,13 +134,14 @@
     if (site && typeof site === "object") {
       if (site.contact) Object.assign(D.contact, cleanContact(site.contact));
       if (Array.isArray(site.clients)) {
-        D.clients = site.clients.filter((c) => c && c.n).map((c) => ({ n: String(c.n).slice(0, 80), src: imgSrc(c.logo, allowData) }));
+        D.clients = site.clients.filter((c) => c && c.n).map((c) => ({ n: String(c.n).slice(0, 80), src: imgSrc(c.logo, allowData), scale: logoScale(c.scale) }));
       }
       if (site.layout && Array.isArray(site.layout.home)) {
         D.layout = { home: site.layout.home.filter((b) => D0.layout.home.includes(b)), hidden: (site.layout.hidden || []).filter((b) => D0.layout.home.includes(b)) };
         D0.layout.home.forEach((b) => { if (!D.layout.home.includes(b)) D.layout.home.push(b); }); // new blocks added in code still show
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
+      if (["s", "m", "l", "xl"].includes(site.logoSize)) D.logoSize = site.logoSize;
       if (site.spotlight && typeof site.spotlight === "object") {
         const s = site.spotlight;
         D.spotlight = {
@@ -196,7 +198,7 @@
     }
   }
   // Clients from data.js use bare file names; give them a src too so app.js has one shape to render.
-  D.clients = D.clients.map((c) => ({ n: c.n, src: imgSrc(c.logo, false) }));
+  D.clients = D.clients.map((c) => ({ n: c.n, src: imgSrc(c.logo, false), scale: logoScale(c.scale) }));
   D.cases = D.cases.map((c) => cleanCase(normCase(c), false));
   D.caseCats = CASE_CATS;
   D.reel = D.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f));

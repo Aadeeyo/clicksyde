@@ -216,7 +216,13 @@ section { position: relative; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 .marquee-track span { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 2.6vw, 32px); letter-spacing: -.04em; color: #b7b4ad; white-space: nowrap; transition: color .2s; }
 .marquee-track span:hover { color: var(--ink); }
-.marquee-track img { width: clamp(104px, 10vw, 140px); height: clamp(42px, 4vw, 56px); object-fit: contain; flex: none; }
+/* logo size: overall (admin: Client logos > Logo size) x per-logo zoom (--s) */
+.marquee { --lw: clamp(120px, 12vw, 168px); --lh: clamp(52px, 5vw, 72px); }
+.marquee.size-s { --lw: clamp(96px, 9vw, 128px); --lh: clamp(40px, 3.6vw, 52px); }
+.marquee.size-l { --lw: clamp(150px, 15vw, 210px); --lh: clamp(64px, 6.4vw, 92px); }
+.marquee.size-xl { --lw: clamp(180px, 18vw, 260px); --lh: clamp(80px, 8vw, 116px); }
+.marquee.size-l .marquee-track, .marquee.size-xl .marquee-track { gap: 80px; }
+.marquee-track img { width: calc(var(--lw) * var(--s, 1)); height: calc(var(--lh) * var(--s, 1)); object-fit: contain; flex: none; }
 @keyframes slide { to { transform: translateX(-50%); } }
 
 /* the one-liner */

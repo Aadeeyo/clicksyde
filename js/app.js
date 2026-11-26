@@ -518,8 +518,8 @@
       <div class="face back"><small>${esc(f.q)}</small><div class="a">${esc(f.a)}</div></div></div></button>`).join("");
     $$(".fact").forEach((b) => b.addEventListener("click", () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true")));
 
-    $(".chapters-story").innerHTML = D.timeline.map(([y, h, p]) => `<div class="cs rv"><div class="yr">${esc(y)}</div><h3>${esc(h)}</h3><p>${esc(p)}</p></div>`).join("");
-    $(".values").innerHTML = D.values.map(([i, h, p]) => `<div class="value rv"><div class="ico" aria-hidden="true">${i}</div><div><h3>${esc(h)}</h3><p>${esc(p)}</p></div></div>`).join("");
+    $(".chapters-story").innerHTML = D.timeline.map((t) => `<div class="cs rv"><div class="yr">${esc(t.y)}</div><h3>${esc(t.h)}</h3><p>${esc(t.p)}</p></div>`).join("");
+    $(".values").innerHTML = D.values.map((v) => `<div class="value rv">${v.i ? `<div class="ico" aria-hidden="true">${esc(v.i)}</div>` : ""}<div><h3>${esc(v.h)}</h3><p>${esc(v.p)}</p></div></div>`).join("");
     $(".team").innerHTML = D.team.map((m) => `<div class="member rv"><div style="overflow:hidden"><div class="ph${m.photo ? " has-photo" : ""}" style="background:${m.c}">${m.photo ? `<img data-media="${esc(m.photo)}" alt="${esc(m.n)}">` : esc(m.n.split(" ").filter(Boolean).map((x) => x[0]).join("").slice(0, 2).toUpperCase())}</div></div>
       <div class="tx"><b>${esc(m.n)}</b><span>${esc(m.r)}</span><span class="odd">${esc(m.odd)}</span></div></div>`).join("");
   };

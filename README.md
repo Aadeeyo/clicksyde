@@ -59,6 +59,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
 | SEO | Search title and description for each page, with a Google-style preview and character counts |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
+| About page | Add, edit, reorder and remove the fun-fact flip cards (question, answer, label), the "Our story" timeline (year, heading, text) and the values (icon, heading, text) |
 | Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |
 | Client logos | Add (one at a time or several at once), rename, reorder and remove brands in the "Trusted by" strip; set the overall logo size (Small to Extra large) and zoom any single logo whose file has a lot of empty space around it |
 | Contact & social | Lead inbox, WhatsApp number and the Instagram / LinkedIn / X / TikTok links |
@@ -79,7 +80,7 @@ What the admin saves is loaded by `js/content.js` on top of `js/data.js`. If the
 
 **Video uploads (live).** Run `supabase/migrations/20261127000000_clicksyde_media.sql` once so the media bucket accepts MP4/WebM up to 50 MB (the Supabase free plan's upload limit). In demo mode, uploaded media is kept in the browser (IndexedDB).
 
-Not in the admin yet (still edited in `js/data.js`): the About page fun facts, values and timeline, the wording of the problem-finder problems, and the contact form questions.
+Not in the admin yet (still edited in `js/data.js`): the wording of the problem-finder problems, the typed prompts after "Like what exactly?" on the About page, and the contact form questions.
 
 ## To add before launch
 

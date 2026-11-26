@@ -71,6 +71,11 @@
         frames: d.reel && Array.isArray(d.reel.frames) && d.reel.frames.length ? d.reel.frames : D0.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f))
       },
       team: Array.isArray(d.team) ? d.team : clone(D0.team),
+      about: {
+        facts: d.about && Array.isArray(d.about.facts) ? d.about.facts : clone(D0.facts),
+        timeline: d.about && Array.isArray(d.about.timeline) ? d.about.timeline : D0.timeline.map((t) => (Array.isArray(t) ? { y: t[0], h: t[1], p: t[2] } : t)),
+        values: d.about && Array.isArray(d.about.values) ? d.about.values : D0.values.map((v) => (Array.isArray(v) ? { i: v[0], h: v[1], p: v[2] } : v))
+      },
       cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
       logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
       seo: d.seo && typeof d.seo === "object" ? d.seo : {},
@@ -259,6 +264,7 @@
     ["cases", "Case studies", "M4 7h16v12H4zM9 7V5h6v2M4 12h16"],
     ["copy", "Page copy", "M4 6h16M4 12h10M4 18h13"],
     ["media", "Media & spotlight", "M4 5h16v14H4zM10 9l5 3-5 3z"],
+    ["about", "About page", "M12 8v.01M11 12h1v5h1M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"],
     ["team", "Team", "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3.3 3-5 6-5s5.3 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17.5 15c2 .4 3.2 2 3.5 5"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
@@ -311,6 +317,7 @@
       else if (sec === "copy") await pageCopy();
       else if (sec === "media") await media();
       else if (sec === "team") await team();
+      else if (sec === "about") await aboutPage();
       else if (sec === "clients") await clients();
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
@@ -715,6 +722,57 @@
     draw();
   }
 
+  /* ---------- About page: fun facts, story timeline, values ---------- */
+  async function aboutPage() {
+    const site = await api.getSite();
+    const ab = site.about;
+    const LISTS = {
+      facts: { title: "Fun facts", hint: "The flip cards under “Like what exactly?”. Visitors tap a question to flip it.", max: 12,
+        blank: () => ({ q: "", a: "", tag: "" }),
+        fields: [["q", "Question", 80, "e.g. Favourite food?"], ["a", "Answer", 300, "", true], ["tag", "Small label", 40, "e.g. Asked by everyone"]] },
+      timeline: { title: "Our story", hint: "The timeline on the dark band, in order from first to latest.", max: 10,
+        blank: () => ({ y: "", h: "", p: "" }),
+        fields: [["y", "Year or label", 12, "2021 or Now"], ["h", "Heading", 120, ""], ["p", "Text", 500, "", true]] },
+      values: { title: "What we believe", hint: "The values cards. The icon is optional (an emoji, or leave it empty).", max: 8,
+        blank: () => ({ i: "", h: "", p: "" }),
+        fields: [["i", "Icon", 4, "🎯"], ["h", "Heading", 60, ""], ["p", "Text", 300, "", true]] }
+    };
+    const read = () => $$("[data-list] li[data-i]").forEach((li) => {
+      const item = ab[li.closest("[data-list]").dataset.list][+li.dataset.i];
+      $$("[data-k]", li).forEach((inp) => { item[inp.dataset.k] = inp.value; });
+    });
+    const draw = () => {
+      view().innerHTML = head("About page", "The fun facts, the story timeline and the values on the About page. The headline, intro and section titles are edited on the page itself (Page copy).",
+        `${siteLink("about.html")}<button class="btn btn-brand" data-save>Save</button>`) +
+        Object.entries(LISTS).map(([key, L]) => `<div class="panel" data-list="${key}"><h2>${L.title}</h2><p class="small muted" style="margin:0">${L.hint}</p>
+          <ul class="rows">${ab[key].map((it, i) => `<li data-i="${i}" style="align-items:stretch">
+            ${L.fields.map(([k, label, max, ph, long]) => long
+              ? `<label class="grow wide">${label}<textarea data-k="${k}" rows="2" maxlength="${max}" placeholder="${esc(ph)}">${esc(it[k] || "")}</textarea></label>`
+              : `<label class="${k === "i" || k === "y" ? "" : "grow"}"${k === "i" ? ' style="width:80px"' : k === "y" ? ' style="width:120px"' : ""}>${label}<input data-k="${k}" maxlength="${max}" value="${esc(it[k] || "")}" placeholder="${esc(ph)}"></label>`).join("")}
+            <div class="moves" style="align-self:center"><button class="icon-btn" data-up ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button><button class="icon-btn" data-down ${i === ab[key].length - 1 ? "disabled" : ""} aria-label="Move down">↓</button><button class="icon-btn danger" data-rm aria-label="Remove">✕</button></div></li>`).join("")}</ul>
+          ${ab[key].length < L.max ? `<button class="btn btn-light" data-add>+ Add</button>` : ""}</div>`).join("");
+      $$("[data-list]").forEach((panel) => {
+        const key = panel.dataset.list, arr = ab[key];
+        $$("li[data-i]", panel).forEach((li) => {
+          const i = +li.dataset.i;
+          $("[data-up]", li).onclick = () => { read(); [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; draw(); };
+          $("[data-down]", li).onclick = () => { read(); [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]]; draw(); };
+          $("[data-rm]", li).onclick = () => { read(); arr.splice(i, 1); draw(); };
+        });
+        const add = $("[data-add]", panel);
+        if (add) add.onclick = () => { read(); arr.push(LISTS[key].blank()); draw(); $$(`[data-list="${key}"] li[data-i]`).pop().querySelector("input, textarea").focus(); };
+      });
+      $("[data-save]").onclick = async () => {
+        read();
+        ab.facts = ab.facts.map((f) => ({ q: f.q.trim(), a: f.a.trim(), tag: f.tag.trim() })).filter((f) => f.q);
+        ab.timeline = ab.timeline.map((t) => ({ y: t.y.trim(), h: t.h.trim(), p: t.p.trim() })).filter((t) => t.h || t.p);
+        ab.values = ab.values.map((v) => ({ i: v.i.trim(), h: v.h.trim(), p: v.p.trim() })).filter((v) => v.h);
+        try { await api.saveSite(site); toast("About page saved."); draw(); } catch (err) { fail(err); }
+      };
+    };
+    draw();
+  }
+
   /* ---------- Team ---------- */
   const TEAM_COLORS = ["#FF4306", "#171512", "#26B3A6", "#C9B6F2", "#2B6CB0", "#F6A8C5"];
   async function team() {
@@ -965,7 +1023,7 @@
         ${count(id) ? `<button class="linkish" data-reset="${id}">Back to original</button>` : ""}</li>`).join("")}</ul>
       <div class="panel"><h3>How it works</h3>
         <p class="small muted" style="margin:0">Each page opens with its text outlined. Click a text and type; press Enter to finish a line. <b>Original wording</b> puts back the text the site launched with. Nothing changes for visitors until you press <b>Save</b>${mode === "demo" ? " (in demo mode, saving only affects this browser)" : ""}.</p>
-        <p class="small muted" style="margin:0">Services, case studies, articles, media, the team, client logos and contact details have their own sections in this admin. The About page facts are still edited in the website's code.</p></div>`;
+        <p class="small muted" style="margin:0">Services, case studies, articles, media, the team, the About page lists, client logos and contact details have their own sections in this admin.</p></div>`;
     $$("[data-reset]").forEach((b) => (b.onclick = async () => {
       const id = b.dataset.reset;
       if (!confirm(`Put every text on ${PAGES.find((p) => p[0] === id)[2]} back to its original wording?`)) return;

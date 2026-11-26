@@ -167,6 +167,12 @@
       if (Array.isArray(site.cases)) {
         D.cases = site.cases.filter((c) => c && c.published !== false && c.client && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(c.id || "")).map((c) => cleanCase(c, allowData));
       }
+      if (site.about && typeof site.about === "object") {
+        const a = site.about, list = (x, n) => (Array.isArray(x) ? x : null) && x.slice(0, n);
+        if (list(a.facts, 12)) D.facts = a.facts.slice(0, 12).filter((f) => f && f.q).map((f) => ({ q: plain(f.q, 80), a: plain(f.a, 300), tag: plain(f.tag, 40) }));
+        if (list(a.timeline, 10)) D.timeline = a.timeline.slice(0, 10).filter((t) => t && (t.h || t.p)).map((t) => ({ y: plain(t.y, 12), h: plain(t.h, 120), p: plain(t.p, 500) }));
+        if (list(a.values, 8)) D.values = a.values.slice(0, 8).filter((v) => v && v.h).map((v) => ({ i: plain(v.i, 4), h: plain(v.h, 60), p: plain(v.p, 300) }));
+      }
       if (Array.isArray(site.team)) {
         D.team = site.team.filter((m) => m && m.n).slice(0, 40).map((m) => ({
           n: plain(m.n, 80), r: plain(m.r, 80), odd: plain(m.odd, 160), c: isHex(m.c) ? m.c : "#171512", photo: mediaSrc(m.photo, allowData)
@@ -211,6 +217,9 @@
   D.caseCats = CASE_CATS;
   D.reel = D.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f));
   D.team = D.team.map((m) => Object.assign({ photo: "" }, m));
+  // About page lists: data.js keeps compact [a, b, c] rows; the site and admin use named fields
+  D.timeline = D.timeline.map((t) => (Array.isArray(t) ? { y: t[0], h: t[1], p: t[2] } : t));
+  D.values = D.values.map((v) => (Array.isArray(v) ? { i: v[0], h: v[1], p: v[2] } : v));
 
   /* ---------- Demo store (shared with admin.html) ---------- */
   const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString();

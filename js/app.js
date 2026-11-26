@@ -202,15 +202,39 @@
     for (let c = 0; c < cols; c++) {
       const frames = D.reel.slice(c * 2).concat(D.reel.slice(0, c * 2)).slice(0, 4);
       const list = frames.concat(frames); // doubled for a seamless loop
-      wall += `<div class="reel-col" style="animation-delay:${-c * 11}s">${list.map(([col, cap]) =>
-        `<div class="frame" style="background:linear-gradient(165deg, ${col}, ${col}bb 55%, #171512)"><span>${esc(cap)}</span></div>`).join("")}</div>`;
+      wall += `<div class="reel-col" style="animation-delay:${-c * 11}s">${list.map((f) =>
+        `<div class="frame${f.img ? " has-img" : ""}" style="background:linear-gradient(165deg, ${f.c}, ${f.c}bb 55%, #171512)">${f.img ? `<img data-media="${esc(f.img)}" alt="">` : ""}${f.cap ? `<span>${esc(f.cap)}</span>` : ""}</div>`).join("")}</div>`;
     }
     reel.insertAdjacentHTML("afterbegin", wall + "</div>");
     const v = $("video", reel);
+    if (v && D.reelVideo) {
+      // the admin's uploaded reel replaces assets/reel.mp4
+      $$("source", v).forEach((s) => s.remove());
+      window.CSmedia.resolve(D.reelVideo).then((u) => { if (!u) return v.remove(); v.src = u; v.load(); v.play().catch(() => {}); });
+    }
     if (v) {
       v.addEventListener("loadeddata", () => { $(".reel-wall", reel).remove(); }, { once: true });
       v.addEventListener("error", () => v.remove(), true);
       $$("source", v).forEach((s) => s.addEventListener("error", () => v.remove()));
+    }
+
+    // Spotlight: one featured campaign, switched on in the admin
+    const sp = $(".spotlight");
+    if (sp) {
+      const s = D.spotlight || {};
+      const show = s.on && (s.title || s.media) && !((D.layout && D.layout.hidden) || []).includes("spotlight");
+      sp.hidden = !show;
+      if (show) {
+        $(".spot-eyebrow", sp).textContent = s.eyebrow || "Spotlight";
+        $(".spot-title", sp).textContent = s.title;
+        $(".spot-text", sp).textContent = s.text;
+        const a = $(".spot-link", sp);
+        if (s.link && s.linkText) { a.href = s.link; a.textContent = s.linkText; a.hidden = false; }
+        $(".spot-media", sp).innerHTML = !s.media ? "" : s.type === "video"
+          ? `<video data-media="${esc(s.media)}" muted loop playsinline autoplay controls preload="metadata"></video>`
+          : `<img data-media="${esc(s.media)}" alt="${esc(s.title)}">`;
+        sp.classList.toggle("no-media", !s.media);
+      }
     }
 
     // Logo slideshow
@@ -481,7 +505,7 @@
 
     $(".chapters-story").innerHTML = D.timeline.map(([y, h, p]) => `<div class="cs rv"><div class="yr">${esc(y)}</div><h3>${esc(h)}</h3><p>${esc(p)}</p></div>`).join("");
     $(".values").innerHTML = D.values.map(([i, h, p]) => `<div class="value rv"><div class="ico" aria-hidden="true">${i}</div><div><h3>${esc(h)}</h3><p>${esc(p)}</p></div></div>`).join("");
-    $(".team").innerHTML = D.team.map((m) => `<div class="member rv"><div style="overflow:hidden"><div class="ph" style="background:${m.c}">${esc(m.n.split(" ").map((x) => x[0]).join("").slice(0, 2))}</div></div>
+    $(".team").innerHTML = D.team.map((m) => `<div class="member rv"><div style="overflow:hidden"><div class="ph${m.photo ? " has-photo" : ""}" style="background:${m.c}">${m.photo ? `<img data-media="${esc(m.photo)}" alt="${esc(m.n)}">` : esc(m.n.split(" ").filter(Boolean).map((x) => x[0]).join("").slice(0, 2).toUpperCase())}</div></div>
       <div class="tx"><b>${esc(m.n)}</b><span>${esc(m.r)}</span><span class="odd">${esc(m.odd)}</span></div></div>`).join("");
   };
 
@@ -642,6 +666,7 @@
   }
 
   if (R[page]) R[page]();
+  $$("[data-media]").forEach((el) => window.CSmedia.resolve(el.dataset.media).then((u) => { if (u) el.src = u; else el.remove(); }));
   if (new URLSearchParams(location.search).has("edit")) {
     const ed = document.createElement("script"); ed.src = "js/editor.js?v=1"; document.body.appendChild(ed);
   }

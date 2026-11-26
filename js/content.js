@@ -30,6 +30,40 @@
     if (allowData && /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(u)) return u;
     return httpsUrl(u);
   };
+  /* media (images or videos) for the reel, spotlight and team: site files, https uploads, demo data/IndexedDB refs */
+  const mediaSrc = (u, allowDemo) => {
+    if (typeof u !== "string" || !u) return "";
+    if (allowDemo && /^idb:[\w-]{6,40}$/.test(u)) return u;
+    return imgSrc(u, allowDemo);
+  };
+  const plain = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+
+  /* Demo-mode uploads too big for localStorage (videos) live in IndexedDB; "idb:<id>" refers to one. */
+  const IDB = (() => {
+    const open = () => new Promise((ok, no) => {
+      if (!window.indexedDB) return no(new Error("This browser can't store files for the demo."));
+      const r = indexedDB.open("clicksyde-demo-media", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("files");
+      r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error);
+    });
+    const tx = (mode, fn) => open().then((db) => new Promise((ok, no) => {
+      const t = db.transaction("files", mode); const req = fn(t.objectStore("files"));
+      t.oncomplete = () => ok(req && req.result); t.onerror = () => no(t.error);
+    }));
+    const urls = {};
+    return {
+      put: (blob) => { const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8); return tx("readwrite", (s) => s.put(blob, id)).then(() => "idb:" + id); },
+      clear: () => tx("readwrite", (s) => s.clear()).catch(() => {}),
+      resolve: (src) => {
+        if (!src || !src.startsWith("idb:")) return Promise.resolve(src || "");
+        const id = src.slice(4);
+        if (urls[id]) return Promise.resolve(urls[id]);
+        return tx("readonly", (s) => s.get(id)).then((b) => (b ? (urls[id] = URL.createObjectURL(b)) : "")).catch(() => "");
+      }
+    };
+  })();
+  window.CSmedia = IDB;
+
   const cleanContact = (c) => {
     const out = {};
     if (typeof c.email === "string" && /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(c.email)) out.email = c.email;
@@ -78,6 +112,25 @@
         D0.layout.home.forEach((b) => { if (!D.layout.home.includes(b)) D.layout.home.push(b); }); // new blocks added in code still show
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
+      if (site.spotlight && typeof site.spotlight === "object") {
+        const s = site.spotlight;
+        D.spotlight = {
+          on: !!s.on, eyebrow: plain(s.eyebrow, 60), title: plain(s.title, 160), text: plain(s.text, 600),
+          media: mediaSrc(s.media, allowData), type: s.type === "video" ? "video" : "image",
+          link: /^(https:\/\/|[\w.\/-]+\.html(#[\w-]+)?$)/.test(s.link || "") ? s.link : "", linkText: plain(s.linkText, 60)
+        };
+      }
+      if (site.reel && typeof site.reel === "object") {
+        D.reelVideo = mediaSrc(site.reel.video, allowData);
+        if (Array.isArray(site.reel.frames) && site.reel.frames.length) {
+          D.reel = site.reel.frames.slice(0, 12).map((f) => ({ c: isHex(f.c) ? f.c : "#2B2B2B", cap: plain(f.cap, 40), img: mediaSrc(f.img, allowData) }));
+        }
+      }
+      if (Array.isArray(site.team)) {
+        D.team = site.team.filter((m) => m && m.n).slice(0, 40).map((m) => ({
+          n: plain(m.n, 80), r: plain(m.r, 80), odd: plain(m.odd, 160), c: isHex(m.c) ? m.c : "#171512", photo: mediaSrc(m.photo, allowData)
+        }));
+      }
       if (site.copy && typeof site.copy === "object") {
         D.copy = {};
         Object.keys(site.copy).forEach((k) => { if (/^[a-z]+\.\d+$/.test(k) && typeof site.copy[k] === "string") D.copy[k] = cleanCopy(site.copy[k]); });
@@ -113,6 +166,8 @@
   }
   // Clients from data.js use bare file names; give them a src too so app.js has one shape to render.
   D.clients = D.clients.map((c) => ({ n: c.n, src: imgSrc(c.logo, false) }));
+  D.reel = D.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f));
+  D.team = D.team.map((m) => Object.assign({ photo: "" }, m));
 
   /* ---------- Demo store (shared with admin.html) ---------- */
   const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString();
@@ -136,7 +191,7 @@
   }
   const readDemo = () => { try { return JSON.parse(local.get(DEMO_KEY)) || null; } catch (_) { return null; } };
   const writeDemo = (s) => local.set(DEMO_KEY, JSON.stringify(s));
-  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, month, cleanCopy };
+  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, mediaSrc, month, cleanCopy };
 
   if (document.body.dataset.page === "admin") return; // the admin panel only needs the store
 

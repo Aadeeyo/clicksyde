@@ -65,6 +65,12 @@
       services: Array.isArray(d.services) && d.services.length ? d.services : clone(D0.services),
       problems: Array.isArray(d.problems) ? d.problems : clone(D0.problems),
       copy: d.copy && typeof d.copy === "object" ? d.copy : {},
+      spotlight: Object.assign(clone(D0.spotlight), d.spotlight || {}),
+      reel: {
+        video: (d.reel && d.reel.video) || "",
+        frames: d.reel && Array.isArray(d.reel.frames) && d.reel.frames.length ? d.reel.frames : D0.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f))
+      },
+      team: Array.isArray(d.team) ? d.team : clone(D0.team),
       postsManaged: !!d.postsManaged
     };
   };
@@ -102,7 +108,13 @@
       if (file.size > 400 * 1024) throw new Error("In demo mode images must be under 400 KB (the live admin takes up to 5 MB).");
       return readFile(file);
     },
-    link: (path) => path + "?demo=1"
+    link: (path) => path + "?demo=1",
+    // videos are too big for localStorage: demo uploads of any media go to IndexedDB
+    async uploadMedia(file) {
+      if (!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm))$/.test(file.type)) throw new Error("Use a JPG, PNG, WebP or GIF image, or an MP4 or WebM video.");
+      if (file.size > 50 * 1024 * 1024) throw new Error("Files must be under 50 MB.");
+      return window.CSmedia.put(file);
+    }
   };
 
   const liveApi = {
@@ -146,7 +158,15 @@
       if (error) throw error;
       return sb.storage.from("media").getPublicUrl(name).data.publicUrl;
     },
-    link: (path) => path + "?fresh=1"
+    link: (path) => path + "?fresh=1",
+    async uploadMedia(file, folder) {
+      if (!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm))$/.test(file.type)) throw new Error("Use a JPG, PNG, WebP or GIF image, or an MP4 or WebM video.");
+      if (file.size > 50 * 1024 * 1024) throw new Error("Files must be under 50 MB. Compress the video (for example with HandBrake) and try again.");
+      const name = `${folder}/${Date.now()}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-").slice(-60)}`;
+      const { error } = await sb.storage.from("media").upload(name, file, { contentType: file.type });
+      if (error) throw (/mime|size|exceed/i.test(error.message) ? new Error("The media bucket doesn't accept this file yet. Run supabase/migrations/20261127000000_clicksyde_media.sql on the Clicksyde project.") : error);
+      return sb.storage.from("media").getPublicUrl(name).data.publicUrl;
+    }
   };
 
   /* ---------- Sign-in ---------- */
@@ -233,6 +253,8 @@
     ["blog", "Blog", "M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14"],
     ["services", "Services", "M5 4h14v11l-5 5H5zM14 20v-5h5"],
     ["copy", "Page copy", "M4 6h16M4 12h10M4 18h13"],
+    ["media", "Media & spotlight", "M4 5h16v14H4zM10 9l5 3-5 3z"],
+    ["team", "Team", "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3.3 3-5 6-5s5.3 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17.5 15c2 .4 3.2 2 3.5 5"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
     ["layout", "Layout & brand", "M4 4h16v5H4zM4 12h7v8H4zM14 12h6v8h-6z"]
@@ -259,7 +281,7 @@
     const reset = $("[data-reset]");
     if (reset) reset.onclick = () => {
       if (!confirm("Reset the demo? This clears every change made in demo mode in this browser.")) return;
-      S.reset(); toast("Demo reset to the starting content."); route();
+      S.reset(); window.CSmedia.clear(); toast("Demo reset to the starting content."); route();
     };
     route();
   }
@@ -280,6 +302,8 @@
       else if (sec === "blog") arg ? await editor(decodeURIComponent(arg)) : await blog();
       else if (sec === "services") arg ? await serviceEditor(decodeURIComponent(arg)) : await services();
       else if (sec === "copy") await pageCopy();
+      else if (sec === "media") await media();
+      else if (sec === "team") await team();
       else if (sec === "clients") await clients();
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
@@ -607,6 +631,124 @@
     preview();
   }
 
+  /* ---------- Media & spotlight ---------- */
+  const showMedia = (root) => $$("[data-media]", root).forEach((el) => window.CSmedia.resolve(el.dataset.media).then((u) => { if (u) el.src = u; }));
+  const mediaTag = (src, type, cls = "") => !src ? "" : (type === "video" || /\.(mp4|webm)(\?|$)/i.test(src))
+    ? `<video class="${cls}" data-media="${esc(src)}" muted loop playsinline autoplay controls preload="metadata"></video>`
+    : `<img class="${cls}" data-media="${esc(S.mediaSrc(src, true) || src)}" alt="">`;
+  const pick = (accept, onFile) => {
+    const i = document.createElement("input"); i.type = "file"; i.accept = accept;
+    i.onchange = () => { if (i.files[0]) onFile(i.files[0]); };
+    i.click();
+  };
+  async function media() {
+    const site = await api.getSite();
+    const reel = site.reel, sp = site.spotlight;
+    const note = mode === "demo" ? "In demo mode files are kept in this browser only." : "Images and videos up to 50 MB.";
+    const busy = (b, on) => { b.disabled = on; b.dataset.label = b.dataset.label || b.textContent; b.textContent = on ? "Uploading…" : b.dataset.label; };
+    const upload = async (btn, accept, folder, done) => pick(accept, async (file) => {
+      busy(btn, true);
+      try { done(await api.uploadMedia(file, folder), file.type.startsWith("video") ? "video" : "image"); draw(); toast("Uploaded. Save to put it on the site."); }
+      catch (err) { fail(err); } finally { busy(btn, false); }
+    });
+    const draw = () => {
+      view().innerHTML = head("Media & spotlight", `The hero reel, its campaign frames, and a Spotlight section on the home page. ${note}`,
+        `${siteLink("index.html")}<button class="btn btn-brand" data-save>Save</button>`) + `
+        <div class="panel"><h2>Spotlight</h2>
+          <p class="small muted" style="margin:0">Feature one campaign on the home page, right under the client logos. Change its position in Layout &amp; brand.</p>
+          <label class="switch"><input type="checkbox" data-f="on" ${sp.on ? "checked" : ""}><span><b>Show the Spotlight on the home page</b></span></label>
+          <div class="two">
+            <div class="form-col">
+              <label>Small label<input data-f="eyebrow" maxlength="60" value="${esc(sp.eyebrow)}" placeholder="Spotlight"></label>
+              <label>Title<input data-f="title" maxlength="160" value="${esc(sp.title)}" placeholder="e.g. How Domino's turned reviews into sales"></label>
+              <label>Text<textarea data-f="text" rows="4" maxlength="600">${esc(sp.text)}</textarea></label>
+              <div class="two-col"><label>Button text<input data-f="linkText" maxlength="60" value="${esc(sp.linkText)}"></label>
+                <label>Button link <span class="muted">(page or https://…)</span><input data-f="link" value="${esc(sp.link)}" placeholder="work.html#dominos"></label></div>
+            </div>
+            <div class="form-col"><div class="media-box">${sp.media ? mediaTag(sp.media, sp.type) : `<span class="muted small">No image or video yet</span>`}</div>
+              <div class="row"><button class="btn btn-light" data-up-spot>${sp.media ? "Replace" : "Upload"} image or video</button>${sp.media ? `<button class="linkish" data-rm-spot>Remove</button>` : ""}</div></div>
+          </div></div>
+        <div class="panel"><h2>Hero reel video</h2>
+          <p class="small muted" style="margin:0">A muted mashup of campaigns (15–30 seconds, MP4) plays inside the split hero. Without one, the campaign frames below are shown.</p>
+          <div class="media-box wide">${reel.video ? mediaTag(reel.video, "video") : `<span class="muted small">Using the campaign frames</span>`}</div>
+          <div class="row"><button class="btn btn-light" data-up-reel>${reel.video ? "Replace" : "Upload"} reel video</button>${reel.video ? `<button class="linkish" data-rm-reel>Remove video</button>` : ""}</div></div>
+        <div class="panel"><h2>Campaign frames</h2>
+          <p class="small muted" style="margin:0">The tiles that drift behind the hero headline. Give each a caption and, ideally, a still from the campaign.</p>
+          <ul class="rows">${reel.frames.map((f, i) => `<li data-i="${i}">
+            <div class="logo-box frame-box" style="background:${isHex(f.c) ? f.c : "#2B2B2B"}">${f.img ? mediaTag(f.img, "image") : ""}</div>
+            <label class="grow">Caption<input data-cap maxlength="40" value="${esc(f.cap)}"></label>
+            <label>Colour<input type="color" data-col value="${isHex(f.c) ? f.c : "#2B2B2B"}"></label>
+            <button class="btn btn-light" data-img>${f.img ? "Replace still" : "Add still"}</button>${f.img ? `<button class="linkish" data-noimg>Remove still</button>` : ""}
+            <div class="moves"><button class="icon-btn" data-up aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn" data-down aria-label="Move down" ${i === reel.frames.length - 1 ? "disabled" : ""}>↓</button><button class="icon-btn danger" data-rm aria-label="Remove frame" ${reel.frames.length < 3 ? "disabled" : ""}>✕</button></div></li>`).join("")}</ul>
+          ${reel.frames.length < 12 ? `<button class="btn btn-light" data-add>+ Add a frame</button>` : ""}</div>`;
+      showMedia(view());
+      $$("[data-f]").forEach((el) => { el.oninput = el.onchange = () => { sp[el.dataset.f] = el.type === "checkbox" ? el.checked : el.value; }; });
+      const up = $("[data-up-spot]"); up.onclick = () => upload(up, "image/*,video/mp4,video/webm", "spotlight", (u, t) => { sp.media = u; sp.type = t; });
+      const rs = $("[data-rm-spot]"); if (rs) rs.onclick = () => { sp.media = ""; draw(); };
+      const ur = $("[data-up-reel]"); ur.onclick = () => upload(ur, "video/mp4,video/webm", "reel", (u) => { reel.video = u; });
+      const rr = $("[data-rm-reel]"); if (rr) rr.onclick = () => { reel.video = ""; draw(); };
+      $$("li[data-i]").forEach((li) => {
+        const i = +li.dataset.i, f = reel.frames[i];
+        $("[data-cap]", li).oninput = (e) => { f.cap = e.target.value; };
+        $("[data-col]", li).oninput = (e) => { f.c = e.target.value; $(".logo-box", li).style.background = f.c; };
+        const b = $("[data-img]", li); b.onclick = () => upload(b, "image/*", "reel", (u) => { f.img = u; });
+        const n = $("[data-noimg]", li); if (n) n.onclick = () => { f.img = ""; draw(); };
+        $("[data-up]", li).onclick = () => { [reel.frames[i - 1], reel.frames[i]] = [reel.frames[i], reel.frames[i - 1]]; draw(); };
+        $("[data-down]", li).onclick = () => { [reel.frames[i + 1], reel.frames[i]] = [reel.frames[i], reel.frames[i + 1]]; draw(); };
+        $("[data-rm]", li).onclick = () => { reel.frames.splice(i, 1); draw(); };
+      });
+      const add = $("[data-add]"); if (add) add.onclick = () => { reel.frames.push({ c: "#2B2B2B", cap: "New campaign", img: "" }); draw(); };
+      $("[data-save]").onclick = async () => {
+        if (sp.on && !sp.title && !sp.media) return toast("Give the Spotlight a title or an image before switching it on.", true);
+        if (sp.link && !/^(https:\/\/|[\w.\/-]+\.html(#[\w-]+)?$)/.test(sp.link)) return toast("The button link must be a page like work.html#dominos or start with https://", true);
+        try { await api.saveSite(site); toast("Media and spotlight saved."); } catch (err) { fail(err); }
+      };
+    };
+    draw();
+  }
+
+  /* ---------- Team ---------- */
+  const TEAM_COLORS = ["#FF4306", "#171512", "#26B3A6", "#C9B6F2", "#2B6CB0", "#F6A8C5"];
+  async function team() {
+    const site = await api.getSite();
+    const list = site.team;
+    const draw = () => {
+      view().innerHTML = head("Team", "The people on the About page, in this order. Update a role when someone changes position.",
+        `${siteLink("about.html")}<button class="btn btn-brand" data-save>Save</button>`) + `
+        <ul class="rows">${list.map((m, i) => `<li data-i="${i}">
+          <div class="logo-box photo" style="background:${isHex(m.c) ? m.c : "#171512"}">${m.photo ? mediaTag(m.photo, "image") : `<span>${esc((m.n || "?").split(" ").filter(Boolean).map((x) => x[0]).join("").slice(0, 2).toUpperCase())}</span>`}</div>
+          <label class="grow">Name<input data-k="n" maxlength="80" value="${esc(m.n)}"></label>
+          <label class="grow">Role<input data-k="r" maxlength="80" value="${esc(m.r)}" placeholder="e.g. Head of Strategy"></label>
+          <label class="grow wide">One odd fact <span class="muted">(optional)</span><input data-k="odd" maxlength="160" value="${esc(m.odd)}"></label>
+          <label>Colour<input type="color" data-col value="${isHex(m.c) ? m.c : "#171512"}"></label>
+          <button class="btn btn-light" data-photo>${m.photo ? "Replace photo" : "Add photo"}</button>${m.photo ? `<button class="linkish" data-nophoto>Remove photo</button>` : ""}
+          <div class="moves"><button class="icon-btn" data-up aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn" data-down aria-label="Move down" ${i === list.length - 1 ? "disabled" : ""}>↓</button><button class="icon-btn danger" data-rm aria-label="Remove ${esc(m.n)}">✕</button></div></li>`).join("")}</ul>
+        <button class="btn btn-light" data-add>+ Add a person</button>
+        <p class="small muted">Square photos look best (at least 600 × 600). ${mode === "demo" ? "In demo mode photos are kept in this browser only." : ""}</p>`;
+      showMedia(view());
+      $$("li[data-i]").forEach((li) => {
+        const i = +li.dataset.i, m = list[i];
+        $$("[data-k]", li).forEach((inp) => { inp.oninput = () => { m[inp.dataset.k] = inp.value; }; });
+        $("[data-col]", li).oninput = (e) => { m.c = e.target.value; $(".logo-box", li).style.background = m.c; };
+        const b = $("[data-photo]", li);
+        b.onclick = () => pick("image/*", async (file) => {
+          b.disabled = true; b.textContent = "Uploading…";
+          try { m.photo = await api.uploadMedia(file, "team"); draw(); toast("Photo added. Save to put it on the site."); } catch (err) { fail(err); draw(); }
+        });
+        const np = $("[data-nophoto]", li); if (np) np.onclick = () => { m.photo = ""; draw(); };
+        $("[data-up]", li).onclick = () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; draw(); };
+        $("[data-down]", li).onclick = () => { [list[i + 1], list[i]] = [list[i], list[i + 1]]; draw(); };
+        $("[data-rm]", li).onclick = () => { if (confirm(`Remove ${m.n || "this person"} from the team?`)) { list.splice(i, 1); draw(); } };
+      });
+      $("[data-add]").onclick = () => { list.push({ n: "", r: "", odd: "", c: TEAM_COLORS[list.length % TEAM_COLORS.length], photo: "" }); draw(); $$("[data-k=n]").pop().focus(); };
+      $("[data-save]").onclick = async () => {
+        site.team = list.map((m) => Object.assign(m, { n: (m.n || "").trim(), r: (m.r || "").trim(), odd: (m.odd || "").trim() })).filter((m) => m.n);
+        try { await api.saveSite(site); toast("Team saved."); team(); } catch (err) { fail(err); }
+      };
+    };
+    draw();
+  }
+
   /* ---------- Page copy: edited on the page itself (js/editor.js) ---------- */
   const PAGES = [["home", "index.html", "Home"], ["services", "services.html", "Services"], ["work", "work.html", "Work"],
     ["insights", "insights.html", "Insights"], ["about", "about.html", "About"], ["start", "start.html", "Contact"]];
@@ -621,7 +763,7 @@
         ${count(id) ? `<button class="linkish" data-reset="${id}">Back to original</button>` : ""}</li>`).join("")}</ul>
       <div class="panel"><h3>How it works</h3>
         <p class="small muted" style="margin:0">Each page opens with its text outlined. Click a text and type; press Enter to finish a line. <b>Original wording</b> puts back the text the site launched with. Nothing changes for visitors until you press <b>Save</b>${mode === "demo" ? " (in demo mode, saving only affects this browser)" : ""}.</p>
-        <p class="small muted" style="margin:0">Services, articles, client logos and contact details have their own sections in this admin. Case studies, the team and the About page facts are still edited in the website's code.</p></div>`;
+        <p class="small muted" style="margin:0">Services, articles, media, the team, client logos and contact details have their own sections in this admin. Case studies and the About page facts are still edited in the website's code.</p></div>`;
     $$("[data-reset]").forEach((b) => (b.onclick = async () => {
       const id = b.dataset.reset;
       if (!confirm(`Put every text on ${PAGES.find((p) => p[0] === id)[2]} back to its original wording?`)) return;

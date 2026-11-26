@@ -30,7 +30,10 @@ window.CS = {
   ],
 
   /* Home page sections, in order. The admin panel can reorder and hide them (hero always comes first). */
-  layout: { home: ["logos", "message", "pillars", "fit", "numbers", "journey"], hidden: [] },
+  layout: { home: ["logos", "spotlight", "message", "pillars", "fit", "numbers", "journey"], hidden: [] },
+
+  /* Spotlight: one featured campaign on the home page, switched on and filled in from the admin (Media & spotlight) */
+  spotlight: { on: false, eyebrow: "Spotlight", title: "", text: "", media: "", type: "image", link: "", linkText: "See the campaign" },
   theme: { brand: "#FF4306" },
 
   /* Logo slideshow: brands Clicksyde has worked with. logo = file in assets/clients/; without one, the name shows as text. */
@@ -219,7 +222,7 @@ window.CS = {
     ["💬", "Straight talk", "If something isn't working we'll say so, and tell you what we'd do instead."]
   ],
 
-  /* PLACEHOLDER team: add real names, roles, photos (assets/team/*.jpg) and one odd fact each */
+  /* PLACEHOLDER team: real names, roles, photos and one odd fact each. Managed in the admin (Team). photo = image URL or file in assets/ */
   team: [
     { n: "Team member", r: "Strategy", odd: "PLACEHOLDER odd fact", c: "#FF4306" },
     { n: "Team member", r: "Creative", odd: "PLACEHOLDER odd fact", c: "#161616" },

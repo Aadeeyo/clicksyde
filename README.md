@@ -48,6 +48,8 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Blog | Write, edit, publish, unpublish, feature and delete Insights articles, with a cover colour, cover text or uploaded cover image |
 | Services | Add, edit, reorder and delete the sticky notes on the Services wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
+| Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
+| Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |
 | Client logos | Add, rename, reorder and remove brands in the home page slideshow, and upload their logos |
 | Contact & social | Lead inbox, WhatsApp number and the Instagram / LinkedIn / X / TikTok links |
 | Layout & brand | Show, hide and reorder the home page sections (the hero stays first) and change the brand colour |
@@ -65,7 +67,9 @@ What the admin saves is loaded by `js/content.js` on top of `js/data.js`. If the
 
 **Page copy for developers.** Every fixed text on a page carries `data-copy="<page>.<n>"` (e.g. `home.4`). Edits are saved by that id in `site_content.data.copy` and applied by `js/app.js` before the page renders; `js/editor.js` is the on-page editor (loaded with `?edit=1`). Never renumber existing ids, or saved edits land on the wrong text. Give new text the next unused number on that page. Edited copy is cleaned to plain text plus bold/italic, line breaks, links and the `serif`/`accent` highlight spans.
 
-Not in the admin yet (still edited in `js/data.js`): case studies and comments, team and fun facts, page headlines, the wording of the problem-finder problems.
+**Video uploads (live).** Run `supabase/migrations/20261127000000_clicksyde_media.sql` once so the media bucket accepts MP4/WebM up to 50 MB (the Supabase free plan's upload limit). In demo mode, uploaded media is kept in the browser (IndexedDB).
+
+Not in the admin yet (still edited in `js/data.js`): case studies and comments, the About page fun facts, values and timeline, the wording of the problem-finder problems, and the contact form questions.
 
 ## To add before launch
 

@@ -769,6 +769,21 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.042em; }
   .stat span { font-size: 13px; }
 }
 
+/* ---------- Media from the admin: reel frame images, spotlight, team photos ---------- */
+.frame.has-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.frame.has-img span { z-index: 1; }
+.spotlight { padding-top: clamp(56px, 8vw, 110px); }
+.spot-grid { display: grid; gap: clamp(24px, 4vw, 56px); align-items: center; }
+@media (min-width: 900px) { .spot-grid { grid-template-columns: 1.25fr 1fr; } }
+.spot-media { border-radius: var(--radius-lg); overflow: hidden; background: var(--ink); box-shadow: 0 30px 60px -34px rgba(23,21,18,.55); aspect-ratio: 16 / 10; }
+.spot-media img, .spot-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.spotlight.no-media .spot-grid { grid-template-columns: 1fr; }
+.spotlight.no-media .spot-media { display: none; }
+.spot-copy { display: grid; gap: 18px; justify-items: start; }
+.spot-copy .lead { margin: 0; }
+.member .ph.has-photo { padding: 0; }
+.member .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }
 .featured .art, .post .art { position: relative; overflow: hidden; }

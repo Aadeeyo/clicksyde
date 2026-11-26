@@ -20,6 +20,14 @@
     if (D.copy && typeof D.copy[k] === "string" && D.copy[k]) el.innerHTML = D.copy[k];
   });
 
+  /* Search titles and descriptions set in the admin (SEO) */
+  const seo = D.seo && D.seo[page];
+  if (seo) {
+    const set = (sel, attr, v) => { const el = document.querySelector(sel); if (el && v) el.setAttribute(attr, v); };
+    if (seo.title) { document.title = seo.title; set('meta[property="og:title"]', "content", seo.title); set('meta[name="twitter:title"]', "content", seo.title); }
+    if (seo.description) ["meta[name=description]", 'meta[property="og:description"]', 'meta[name="twitter:description"]'].forEach((s) => set(s, "content", seo.description));
+  }
+
   /* Brand colour chosen in the admin panel (Layout & brand) */
   if (D.theme && D.theme.brand && D.theme.brand.toUpperCase() !== "#FF4306") {
     const r = document.documentElement.style;
@@ -357,7 +365,7 @@
         ${c.slides.length ? `<div class="carousel">
           <div class="slides" tabindex="0" aria-label="${esc(c.client)} images">${c.slides.map((sl) => `
             <div class="slide${sl.media ? " has-media" : ""}" style="background:linear-gradient(150deg, ${sl.c}, #161616 140%)">
-              ${sl.media ? (sl.type === "video" ? `<video class="slide-media" data-media="${esc(sl.media)}" muted loop playsinline autoplay preload="metadata"></video>` : `<img class="slide-media" data-media="${esc(sl.media)}" alt="">`) : ""}
+              ${sl.media ? (sl.type === "video" ? `<video class="slide-media" data-media="${esc(sl.media)}" muted loop playsinline autoplay preload="metadata"></video>` : `<img class="slide-media" data-media="${esc(sl.media)}" alt="${esc(c.client + (sl.cap ? ": " + sl.cap : ""))}">`) : ""}
               ${sl.big ? `<div class="big">${esc(sl.big).replace(/\n/g, "<br>")}</div>` : ""}${sl.cap ? `<span class="cap">${esc(sl.cap)}</span>` : ""}</div>`).join("")}
           </div>
           ${c.slides.length > 1 ? `<div class="dots">${c.slides.map((_, i) => `<button aria-label="Image ${i + 1}" aria-current="${i === 0}"></button>`).join("")}</div>` : ""}
@@ -416,7 +424,7 @@
       $(".featured-slot").innerHTML = `<p class="lead">New articles are on the way. Join the newsletter below and get the first one in your inbox.</p>`;
       return;
     }
-    const art = (p, big) => p.image ? `<img class="cover" src="${esc(p.image)}" alt="">` : big ? `<span class="big">${esc(p.art)}</span>` : esc(p.art);
+    const art = (p, big) => p.image ? `<img class="cover" src="${esc(p.image)}" alt="${esc(p.title)}">` : big ? `<span class="big">${esc(p.art)}</span>` : esc(p.art);
     const f = D.posts.find((p) => p.featured) || D.posts[0];
     const meta = (p) => `<div class="post-meta"><span class="cat">${esc(p.cat)}</span><span>${p.mins} min read</span><span>·</span><span>${esc(p.date)}</span></div>`;
     $(".featured-slot").innerHTML = `<button class="featured rv" data-id="${esc(f.id)}">

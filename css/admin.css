@@ -226,3 +226,15 @@
 .panel, .adm-view > * { min-width: 0; }
 .strip-wrap { min-width: 0; max-width: 100%; overflow-x: auto; }
 .adm .logo-scale input[type=range] { padding: 0; box-shadow: none; background: none; border-radius: 0; height: 24px; }
+
+/* SEO */
+.seo-rows li { align-items: flex-start; }
+.seo-fields { display: grid; gap: 10px; }
+.count { float: right; font-weight: 600; color: var(--muted); }
+.count.over { color: #c2410c; }
+.serp { flex: 1 1 320px; display: grid; gap: 4px; padding: 16px 18px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-family: Arial, sans-serif; align-self: center; }
+.serp-url { font-size: 13px; color: #4d5156; }
+.serp-title { font-size: 19px; line-height: 1.3; color: #1a0dab; }
+.serp-desc { font-size: 14px; line-height: 1.5; color: #4d5156; }
+.seo-fields label { display: block !important; }
+.seo-fields label input, .seo-fields label textarea { margin-top: 6px; }

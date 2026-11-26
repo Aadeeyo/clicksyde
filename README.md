@@ -32,6 +32,12 @@ Each page is a **chapter** that answers one question a prospective client has. E
 
 The original storybook (reel-wall hero, sticky-note wall, bottom dock), made subtly richer and kept distinct from the Bvndle / BRF sites: Manrope with Fraunces italics for emphasis, warm near-black and soft white with Clicksyde orange, soft-cornered buttons with a little depth, layered soft shadows, a dark-glass dock and a straight, calmer reel wall. The finish lives in the "SUBTLY RICH FINISH" block of `css/clicksyde.css`.
 
+## SEO
+
+In place: keyword-led titles and descriptions per page (editable in admin > SEO), canonical URLs, Open Graph / X share tags with `assets/share.jpg` (1200x630), Organization + ProfessionalService + WebSite structured data on the home page, `robots.txt`, `sitemap.xml`, a branded `404.html`, alt text on content images, and `noindex` on demo, edit and preview links. URLs assume the site runs at `https://clicksyde.com/` with `.html` addresses: if the host serves clean URLs (`/services`), update the canonical tags and `sitemap.xml` to match, and update `<lastmod>` when pages change.
+
+Still to do (see the SEO plan): pre-rendering and separate pages for articles, case studies and key services; Google Search Console; Google Business Profile; directory listings; analytics with conversion events; 301 redirects from the current clicksyde.com pages at launch.
+
 ## Editing content
 
 All copy starts in `js/data.js`: services, case studies, comments, articles, fun facts, team, form questions and contact details. Search for **PLACEHOLDER** to find everything that still needs real content.
@@ -49,6 +55,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Services | Add, edit, reorder and delete the sticky notes on the Services wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
 | Case studies | Add, edit, reorder, publish/unpublish and delete the case studies on the Work page: client, headline, summary, tags and filter, slides (caption, big text, colour, image or video), results, the full story, the client testimonial and Clicksyde's reply |
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
+| SEO | Search title and description for each page, with a Google-style preview and character counts |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
 | Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |
 | Client logos | Add (one at a time or several at once), rename, reorder and remove brands in the "Trusted by" strip; set the overall logo size (Small to Extra large) and zoom any single logo whose file has a lot of empty space around it |

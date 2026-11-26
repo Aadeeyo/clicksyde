@@ -797,6 +797,9 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.042em; }
 .slide.has-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(23,21,18,.55)); }
 .slide .cap { z-index: 2; }
 
+/* 404 */
+.notfound { min-height: calc(100svh - 76px - 110px); display: flex; align-items: center; }
+
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }
 .featured .art, .post .art { position: relative; overflow: hidden; }

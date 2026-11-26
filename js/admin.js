@@ -73,6 +73,7 @@
       team: Array.isArray(d.team) ? d.team : clone(D0.team),
       cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
       logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
+      seo: d.seo && typeof d.seo === "object" ? d.seo : {},
       postsManaged: !!d.postsManaged
     };
   };
@@ -260,6 +261,7 @@
     ["team", "Team", "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3.3 3-5 6-5s5.3 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17.5 15c2 .4 3.2 2 3.5 5"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
+    ["seo", "SEO", "M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5 20 20"],
     ["layout", "Layout & brand", "M4 4h16v5H4zM4 12h7v8H4zM14 12h6v8h-6z"]
   ];
   const icon = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
@@ -311,6 +313,7 @@
       else if (sec === "clients") await clients();
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
+      else if (sec === "seo") await seoScreen();
       else await overview();
     } catch (err) { v.innerHTML = head("Something went wrong") + `<p class="note">${esc(friendly(err))}</p>`; console.error(err); }
     window.scrollTo(0, 0);
@@ -897,6 +900,54 @@
       };
     };
     draw();
+  }
+
+  /* ---------- SEO: search title + description per page ---------- */
+  const SEO_PAGES = [["home", "index.html", "Home", ""], ["wall", "services.html", "Services", "services.html"], ["work", "work.html", "Work", "work.html"],
+    ["insights", "insights.html", "Insights", "insights.html"], ["about", "about.html", "About", "about.html"], ["talk", "start.html", "Contact", "start.html"]];
+  async function seoScreen() {
+    const site = await api.getSite();
+    // the wording in each page's code, shown until the admin changes it
+    const defaults = {};
+    await Promise.all(SEO_PAGES.map(async ([id, file]) => {
+      try {
+        const doc = new DOMParser().parseFromString(await (await fetch(file, { cache: "no-store" })).text(), "text/html");
+        defaults[id] = { title: doc.title, description: (doc.querySelector("meta[name=description]") || {}).content || "" };
+      } catch (_) { defaults[id] = { title: "", description: "" }; }
+    }));
+    const seo = site.seo;
+    const val = (id, k) => (seo[id] && seo[id][k]) || defaults[id][k] || "";
+    view().innerHTML = head("SEO", "How each page appears in Google and when it's shared. Aim for a title under 60 characters and a description under 160 that says what the page offers and where.",
+      `<button class="btn btn-brand" data-save>Save</button>`) + `
+      <ul class="rows seo-rows">${SEO_PAGES.map(([id, file, name, path]) => `<li data-p="${id}">
+        <div class="grow wide seo-fields"><b>${name}</b>
+          <label>Title <span class="count" data-c="title"></span><input data-k="title" maxlength="70" value="${esc(val(id, "title"))}"></label>
+          <label>Description <span class="count" data-c="description"></span><textarea data-k="description" rows="2" maxlength="170">${esc(val(id, "description"))}</textarea></label>
+          ${seo[id] ? `<button class="linkish" data-reset>Back to the original</button>` : ""}</div>
+        <div class="serp"><span class="serp-url">clicksyde.com${path ? " › " + esc(path.replace(".html", "")) : ""}</span><span class="serp-title"></span><span class="serp-desc"></span></div></li>`).join("")}</ul>
+      <div class="panel"><h3>Also in place</h3><p class="small muted" style="margin:0">Share previews (image, title and description) for WhatsApp, LinkedIn and X, a sitemap for Google, business details for search results, and hidden demo and edit links. After launch, add the site to Google Search Console and submit <code>clicksyde.com/sitemap.xml</code>.</p></div>`;
+    const sync = (li) => {
+      const t = $("[data-k=title]", li).value, d = $("[data-k=description]", li).value;
+      const ct = $("[data-c=title]", li), cd = $("[data-c=description]", li);
+      ct.textContent = `${t.length}/60`; ct.classList.toggle("over", t.length > 60);
+      cd.textContent = `${d.length}/160`; cd.classList.toggle("over", d.length > 160);
+      $(".serp-title", li).textContent = t.length > 60 ? t.slice(0, 58) + "…" : t;
+      $(".serp-desc", li).textContent = d.length > 160 ? d.slice(0, 157) + "…" : d;
+    };
+    $$("li[data-p]").forEach((li) => {
+      $$("[data-k]", li).forEach((inp) => (inp.oninput = () => sync(li)));
+      sync(li);
+      const r = $("[data-reset]", li);
+      if (r) r.onclick = async () => { delete seo[li.dataset.p]; try { await api.saveSite(site); toast("Back to the original wording."); seoScreen(); } catch (err) { fail(err); } };
+    });
+    $("[data-save]").onclick = async () => {
+      $$("li[data-p]").forEach((li) => {
+        const id = li.dataset.p, t = $("[data-k=title]", li).value.trim(), d = $("[data-k=description]", li).value.trim();
+        if (t === defaults[id].title && d === defaults[id].description) delete seo[id];
+        else seo[id] = { title: t || defaults[id].title, description: d || defaults[id].description };
+      });
+      try { await api.saveSite(site); toast("SEO saved."); seoScreen(); } catch (err) { fail(err); }
+    };
   }
 
   /* ---------- Page copy: edited on the page itself (js/editor.js) ---------- */

@@ -142,6 +142,13 @@
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
       if (["s", "m", "l", "xl"].includes(site.logoSize)) D.logoSize = site.logoSize;
+      if (site.seo && typeof site.seo === "object") {
+        D.seo = {};
+        Object.keys(site.seo).forEach((k) => {
+          const v = site.seo[k];
+          if (/^[a-z]+$/.test(k) && v && typeof v === "object") D.seo[k] = { title: plain(v.title, 70), description: plain(v.description, 170) };
+        });
+      }
       if (site.spotlight && typeof site.spotlight === "object") {
         const s = site.spotlight;
         D.spotlight = {
@@ -236,6 +243,10 @@
   if (params.get("demo") === "0") session.del(VIEW_KEY);
   if (params.has("fresh") || params.has("edit")) session.del(CACHE_KEY); // the admin's "View site" link: skip the cached copy
   const demo = session.get(VIEW_KEY) === "1";
+  // demo previews and edit mode are never for search engines
+  if (demo || params.has("edit") || params.has("fresh")) {
+    const m = document.createElement("meta"); m.name = "robots"; m.content = "noindex"; document.head.appendChild(m);
+  }
 
   if (demo) {
     const s = readDemo() || seed();

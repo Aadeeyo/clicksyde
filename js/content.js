@@ -142,6 +142,7 @@
       }
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
       if (["s", "m", "l", "xl"].includes(site.logoSize)) D.logoSize = site.logoSize;
+      if (site.finish === "luxe" || site.finish === "standard") D.finish = site.finish;
       if (site.seo && typeof site.seo === "object") {
         D.seo = {};
         Object.keys(site.seo).forEach((k) => {

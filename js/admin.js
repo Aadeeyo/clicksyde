@@ -74,6 +74,7 @@
       cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
       logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
       seo: d.seo && typeof d.seo === "object" ? d.seo : {},
+      finish: d.finish === "luxe" ? "luxe" : "standard",
       postsManaged: !!d.postsManaged
     };
   };
@@ -1068,6 +1069,7 @@
   /* ---------- Layout & brand ---------- */
   const BLOCKS = {
     logos: ["Client logos", "The scrolling strip of brands under the hero"],
+    spotlight: ["Spotlight", "One featured campaign (switch it on in Media & spotlight)"],
     message: ["The one-liner", "“What we do” in one sentence that lights up as you scroll"],
     pillars: ["Be seen, be chosen, be remembered", "The three promises"],
     fit: ["Is this for me?", "The checklist visitors tick"],
@@ -1081,14 +1083,20 @@
     D0.layout.home.forEach((b) => { if (!lay.home.includes(b)) lay.home.push(b); });
     lay.hidden = lay.hidden || [];
     let brand = site.theme.brand;
+    let finish = site.finish;
     const draw = () => {
       view().innerHTML = head("Layout & brand", "Choose which home page sections show and in what order. The hero always stays at the top.",
         `${siteLink("index.html")}<button class="btn btn-brand" data-save>Save</button>`) + `
+        <div class="panel"><div class="row" style="justify-content:space-between"><div><h2>Finish</h2>
+            <p class="small muted" style="margin:4px 0 0">Luxe keeps the same design and adds calmer pacing, word-by-word headline reveals, images that unveil as you scroll, a fine film grain, a deeper espresso and sand palette with orange as an accent, and a short branded intro on the first visit.</p></div>
+            <div class="seg" role="group" aria-label="Finish"><button class="seg-btn" data-finish="standard" aria-pressed="${finish === "standard"}">Standard</button><button class="seg-btn" data-finish="luxe" aria-pressed="${finish === "luxe"}">Luxe</button></div></div>
+          <div class="row"><a class="btn btn-light" href="${esc(api.link("index.html") + "&luxe=0")}" target="_blank" rel="noopener">Preview Standard ↗</a><a class="btn btn-light" href="${esc(api.link("index.html") + "&luxe=1")}" target="_blank" rel="noopener">Preview Luxe ↗</a>
+            <span class="small muted">Previews don't change anything for visitors. Save to make your choice live.</span></div></div>
         <div class="two">
           <div class="panel"><h2>Home page sections</h2>
             <ol class="blocks"><li class="fixed"><b>Hero</b><span class="muted small">Headline, buttons and campaign reel · always first</span></li>
             ${lay.home.map((b, i) => { const off = lay.hidden.includes(b); return `<li data-b="${b}" class="${off ? "off" : ""}">
-              <label class="switch"><input type="checkbox" ${off ? "" : "checked"} data-show><span><b>${esc(BLOCKS[b][0])}</b><span class="muted small">${esc(BLOCKS[b][1])}</span></span></label>
+              <label class="switch"><input type="checkbox" ${off ? "" : "checked"} data-show><span><b>${esc((BLOCKS[b] || [b])[0])}</b><span class="muted small">${esc((BLOCKS[b] || ["", ""])[1])}</span></span></label>
               <div class="moves"><button class="icon-btn" data-up aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn" data-down aria-label="Move down" ${i === lay.home.length - 1 ? "disabled" : ""}>↓</button></div></li>`; }).join("")}
             </ol><button class="linkish" data-default>Back to the original layout</button></div>
           <div class="panel"><h2>Brand colour</h2><p class="muted small">Used for buttons, highlights and accents across the site.</p>
@@ -1102,11 +1110,12 @@
         $("[data-up]", li).onclick = () => { [lay.home[i - 1], lay.home[i]] = [lay.home[i], lay.home[i - 1]]; draw(); };
         $("[data-down]", li).onclick = () => { [lay.home[i + 1], lay.home[i]] = [lay.home[i], lay.home[i + 1]]; draw(); };
       });
-      $("[data-default]").onclick = () => { lay.home = clone(D0.layout.home); lay.hidden = []; brand = "#FF4306"; draw(); };
+      $("[data-default]").onclick = () => { lay.home = clone(D0.layout.home); lay.hidden = []; brand = "#FF4306"; finish = "standard"; draw(); };
       $$(".brand-sw").forEach((s) => (s.onclick = () => { brand = s.dataset.c; draw(); }));
+      $$("[data-finish]").forEach((b) => (b.onclick = () => { finish = b.dataset.finish; draw(); }));
       $("[data-custom]").onchange = (e) => { brand = e.target.value; draw(); };
       $("[data-save]").onclick = async () => {
-        try { await api.saveSite(Object.assign(site, { layout: lay, theme: { brand } })); toast("Layout and brand saved."); } catch (err) { fail(err); }
+        try { await api.saveSite(Object.assign(site, { layout: lay, theme: { brand }, finish })); toast("Layout and brand saved."); } catch (err) { fail(err); }
       };
     };
     draw();

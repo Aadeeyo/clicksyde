@@ -28,6 +28,11 @@
     if (seo.description) ["meta[name=description]", 'meta[property="og:description"]', 'meta[name="twitter:description"]'].forEach((s) => set(s, "content", seo.description));
   }
 
+  /* Finish chosen in the admin (Layout & brand): Standard or Luxe. ?luxe=1 / ?luxe=0 previews either without saving. */
+  const qsLuxe = new URLSearchParams(location.search).get("luxe");
+  const luxe = qsLuxe === "1" || (qsLuxe !== "0" && D.finish === "luxe");
+  document.documentElement.classList.toggle("luxe", luxe);
+
   /* Brand colour chosen in the admin panel (Layout & brand) */
   if (D.theme && D.theme.brand && D.theme.brand.toUpperCase() !== "#FF4306") {
     const r = document.documentElement.style;
@@ -654,6 +659,50 @@
       return r.ok || r.status === 409; // 409 = already subscribed
     } catch (_) { return false; }
   }
+  /* Luxe finish: headlines rise in word by word, images unveil, a short branded intro on the first visit */
+  function luxeFinish() {
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const editing = new URLSearchParams(location.search).has("edit");
+    if (still || editing) return;
+    // headlines: wrap each word in a mask so it can rise into view (keeps inline styling such as the serif italics)
+    $$("h1.rv, h2.rv, .h-lg.rv, .h-xl.rv, .turn .t, .sh-card h1").forEach((h) => {
+      if (h.closest(".oneliner") || h.dataset.lx) return;
+      h.dataset.lx = "1";
+      let i = 0;
+      const walk = (node) => Array.from(node.childNodes).forEach((n) => {
+        if (n.nodeType === 1) return walk(n);
+        if (n.nodeType !== 3 || !n.textContent.trim()) return;
+        const frag = document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach((w) => {
+          if (!w) return;
+          if (/^\s+$/.test(w)) return frag.appendChild(document.createTextNode(w));
+          const o = document.createElement("span"); o.className = "lx-w";
+          const inner = document.createElement("span"); inner.style.setProperty("--i", i++); inner.textContent = w;
+          o.appendChild(inner); frag.appendChild(o);
+        });
+        n.replaceWith(frag);
+      });
+      walk(h);
+      if (!h.classList.contains("rv")) h.classList.add("lx-self");
+    });
+    // images and media unveil as they scroll in
+    const unveil = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("lx-in"); unveil.unobserve(e.target); } }), { threshold: 0.15 });
+    $$(".spot-media, .case .carousel, .member .ph, .post .art, .featured .art").forEach((el) => { el.classList.add("lx-img"); unveil.observe(el); });
+    $$(".lx-self").forEach((el) => unveil.observe(el));
+    $$(".sh-card h1").forEach((el) => el.classList.add("lx-in"));
+    // a short branded intro, once per visit
+    let seen = null; try { seen = sessionStorage.getItem("cs-intro"); sessionStorage.setItem("cs-intro", "1"); } catch (_) {}
+    if (!seen) {
+      const intro = document.createElement("div");
+      intro.className = "lx-intro"; intro.setAttribute("aria-hidden", "true");
+      intro.innerHTML = `<div class="lx-mark">${mark()}</div>`;
+      document.body.appendChild(intro);
+      requestAnimationFrame(() => intro.classList.add("go"));
+      setTimeout(() => intro.classList.add("out"), 850);
+      setTimeout(() => intro.remove(), 1700);
+    }
+  }
+
   function safeGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
 
@@ -676,6 +725,7 @@
   }
 
   if (R[page]) R[page]();
+  if (luxe) luxeFinish();
   $$("[data-media]").forEach((el) => window.CSmedia.resolve(el.dataset.media).then((u) => { if (u) el.src = u; else el.remove(); }));
   if (new URLSearchParams(location.search).has("edit")) {
     const ed = document.createElement("script"); ed.src = "js/editor.js?v=1"; document.body.appendChild(ed);

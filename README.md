@@ -38,6 +38,8 @@ In place: keyword-led titles and descriptions per page (editable in admin > SEO)
 
 Still to do (see the SEO plan): pre-rendering and separate pages for articles, case studies and key services; Google Search Console; Google Business Profile; directory listings; analytics with conversion events; 301 redirects from the current clicksyde.com pages at launch.
 
+**Luxe finish.** Admin > Layout & brand > Finish switches between Standard and Luxe (add `?luxe=1` or `?luxe=0` to any page to preview either without saving). Luxe keeps the design and adds: calmer spacing, word-by-word headline reveals, images that unveil on scroll, a fine film grain, an espresso and sand palette with orange as the accent, serif numerals, refined buttons, and a short branded intro once per visit. Reduced-motion visitors and edit mode get the colours without the motion. Styles live in the "LUXE FINISH" block of `css/clicksyde.css`; motion in `luxeFinish()` in `js/app.js`.
+
 ## Editing content
 
 All copy starts in `js/data.js`: services, case studies, comments, articles, fun facts, team, form questions and contact details. Search for **PLACEHOLDER** to find everything that still needs real content.

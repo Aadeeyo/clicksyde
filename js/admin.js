@@ -71,6 +71,7 @@
         frames: d.reel && Array.isArray(d.reel.frames) && d.reel.frames.length ? d.reel.frames : D0.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f))
       },
       team: Array.isArray(d.team) ? d.team : clone(D0.team),
+      cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
       postsManaged: !!d.postsManaged
     };
   };
@@ -252,6 +253,7 @@
     ["newsletter", "Newsletter", "M5 4h14v16l-7-4-7 4z"],
     ["blog", "Blog", "M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14"],
     ["services", "Services", "M5 4h14v11l-5 5H5zM14 20v-5h5"],
+    ["cases", "Case studies", "M4 7h16v12H4zM9 7V5h6v2M4 12h16"],
     ["copy", "Page copy", "M4 6h16M4 12h10M4 18h13"],
     ["media", "Media & spotlight", "M4 5h16v14H4zM10 9l5 3-5 3z"],
     ["team", "Team", "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3.3 3-5 6-5s5.3 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17.5 15c2 .4 3.2 2 3.5 5"],
@@ -301,6 +303,7 @@
       else if (sec === "newsletter") await newsletter();
       else if (sec === "blog") arg ? await editor(decodeURIComponent(arg)) : await blog();
       else if (sec === "services") arg ? await serviceEditor(decodeURIComponent(arg)) : await services();
+      else if (sec === "cases") arg ? await caseEditor(decodeURIComponent(arg)) : await cases();
       else if (sec === "copy") await pageCopy();
       else if (sec === "media") await media();
       else if (sec === "team") await team();
@@ -749,6 +752,152 @@
     draw();
   }
 
+  /* ---------- Case studies (Work page) ---------- */
+  async function cases() {
+    const site = await api.getSite();
+    const list = site.cases;
+    const save = async (msg) => { try { await api.saveSite(site); toast(msg); draw(); } catch (err) { fail(err); } };
+    const draw = () => {
+      view().innerHTML = head("Case studies", "The work on the Work page, in this order. Drafts stay hidden from visitors.",
+        `${siteLink("work.html")}<a class="btn btn-brand" href="#cases/new">New case study</a>`) +
+        (list.length ? `<ul class="notes-admin">${list.map((c, i) => `<li>
+          <div class="mini-note" style="background:linear-gradient(150deg, ${isHex(c.color) ? c.color : "#2B2B2B"}, #171512 140%);color:#fff"><span>${String(i + 1).padStart(2, "0")}</span><b>${esc(c.client)}</b></div>
+          <div class="grow"><b>${esc(c.title || c.client)}</b> ${c.published === false ? `<span class="pill s-draft">draft</span>` : `<span class="pill s-won">published</span>`}
+            <p class="muted small">${esc(c.sub || "")}</p><p class="small">${(c.stats || []).slice(0, 3).map((s) => `<b>${esc(s.n)}</b> ${esc(s.l)}`).join(" · ")}</p></div>
+          <div class="moves"><a class="btn btn-light" href="#cases/${encodeURIComponent(c.id)}">Edit</a>
+            <button class="icon-btn" data-up="${i}" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button class="icon-btn" data-down="${i}" aria-label="Move down" ${i === list.length - 1 ? "disabled" : ""}>↓</button>
+            <button class="icon-btn danger" data-rm="${i}" aria-label="Delete ${esc(c.client)}">✕</button></div></li>`).join("")}</ul>
+          <p class="small muted">Reordering and deleting save straight away. The home page's “How we did it for Domino's” button links to work.html#dominos.</p>`
+        : `<p class="muted empty">No case studies yet. <a href="#cases/new">Add the first one.</a></p>`);
+      $$("[data-up]").forEach((b) => (b.onclick = () => { const i = +b.dataset.up; [list[i - 1], list[i]] = [list[i], list[i - 1]]; save("Order saved."); }));
+      $$("[data-down]").forEach((b) => (b.onclick = () => { const i = +b.dataset.down; [list[i + 1], list[i]] = [list[i], list[i + 1]]; save("Order saved."); }));
+      $$("[data-rm]").forEach((b) => (b.onclick = () => {
+        const c = list[+b.dataset.rm];
+        if (!confirm(`Delete the ${c.client} case study? This can't be undone.`)) return;
+        list.splice(+b.dataset.rm, 1); save("Case study deleted.");
+      }));
+    };
+    draw();
+  }
+
+  async function caseEditor(id) {
+    const site = await api.getSite();
+    const isNew = id === "new";
+    const found = site.cases.find((c) => c.id === id);
+    if (!isNew && !found) { view().innerHTML = head("Case study not found") + `<p><a href="#cases">← All case studies</a></p>`; return; }
+    const c = isNew ? { id: "", client: "", color: "#2B2B2B", tags: [], cat: "show", title: "", sub: "", published: false,
+      slides: [{ c: "#2B2B2B", cap: "The brief", big: "", media: "", type: "image" }], stats: [{ n: "", l: "", hot: true }],
+      story: [{ h: "The challenge", p: "" }, { h: "What we did", p: "" }, { h: "The result", p: "" }], quote: { who: "", role: "", said: "" }, reply: "" } : clone(found);
+    c.quote = c.quote || { who: "", role: "", said: "" };
+    let slugTouched = !isNew;
+    const busy = (b, on) => { b.disabled = on; b.dataset.label = b.dataset.label || b.textContent; b.textContent = on ? "Uploading…" : b.dataset.label; };
+    const read = () => {
+      const f = $(".case-form");
+      ["client", "title", "sub", "reply"].forEach((k) => { c[k] = f[k].value; });
+      c.id = f.id.value.trim(); c.cat = f.cat.value; c.color = f.color.value; c.published = f.published.checked;
+      c.tags = f.tags.value.split(",").map((t) => t.trim()).filter(Boolean);
+      c.quote = { who: f.qwho.value, role: f.qrole.value, said: f.qsaid.value };
+      $$("[data-slide]").forEach((row, i) => Object.assign(c.slides[i], { cap: $("[data-k=cap]", row).value, big: $("[data-k=big]", row).value, c: $("[data-k=c]", row).value }));
+      $$("[data-stat]").forEach((row, i) => Object.assign(c.stats[i], { n: $("[data-k=n]", row).value, l: $("[data-k=l]", row).value, hot: $("[data-k=hot]", row).checked }));
+      $$("[data-story]").forEach((row, i) => Object.assign(c.story[i], { h: $("[data-k=h]", row).value, p: $("[data-k=p]", row).value }));
+    };
+    const draw = () => {
+      view().innerHTML = head(isNew ? "New case study" : "Edit case study", `<a href="#cases">← All case studies</a>`, !isNew && c.published !== false ? siteLink(`work.html#${c.id}`) : "") + `
+        <form class="case-form editor">
+          <div class="ed-main">
+            <div class="panel"><h3>The basics</h3>
+              <div class="two-col"><label>Client<input name="client" required maxlength="80" value="${esc(c.client)}" placeholder="e.g. Domino's Pizza"></label>
+                <label>Web address <span class="muted">(work.html#…)</span><input name="id" required maxlength="40" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(c.id)}" ${isNew ? "" : "readonly"}></label></div>
+              <label>Headline<input name="title" maxlength="120" value="${esc(c.title)}" placeholder="Usually the client's name"></label>
+              <label>One-line summary<input name="sub" maxlength="200" value="${esc(c.sub)}" placeholder="e.g. How we turned customers' feedback into a stronger product story"></label>
+              <div class="two-col"><label>Tags <span class="muted">(comma separated)</span><input name="tags" value="${esc((c.tags || []).join(", "))}" placeholder="Marketing, Customer Feedback"></label>
+                <label>Filter on the Work page<select name="cat">${S.caseCats.map(([k, l]) => `<option value="${k}" ${c.cat === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label></div>
+            </div>
+            <div class="panel"><h3>Slides <span class="muted small">(the image carousel, up to 6)</span></h3>
+              <ul class="rows">${c.slides.map((s, i) => `<li data-slide="${i}">
+                <div class="logo-box frame-box" style="background:${isHex(s.c) ? s.c : "#2B2B2B"}">${s.media ? mediaTag(s.media, s.type) : ""}</div>
+                <label class="grow">Caption<input data-k="cap" maxlength="40" value="${esc(s.cap)}"></label>
+                <label class="grow">Big text <span class="muted">(optional, over the slide)</span><input data-k="big" maxlength="60" value="${esc((s.big || "").replace(/\n/g, " / "))}" placeholder="Line one / line two"></label>
+                <label>Colour<input type="color" data-k="c" value="${isHex(s.c) ? s.c : "#2B2B2B"}"></label>
+                <button type="button" class="btn btn-light" data-media>${s.media ? "Replace" : "Add"} image or video</button>${s.media ? `<button type="button" class="linkish" data-nomedia>Remove</button>` : ""}
+                <div class="moves"><button type="button" class="icon-btn" data-up ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button><button type="button" class="icon-btn" data-down ${i === c.slides.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button><button type="button" class="icon-btn danger" data-rm aria-label="Remove slide">✕</button></div></li>`).join("")}</ul>
+              ${c.slides.length < 6 ? `<button type="button" class="btn btn-light" data-add-slide>+ Add a slide</button>` : ""}</div>
+            <div class="panel"><h3>Results <span class="muted small">(up to 4 numbers)</span></h3>
+              <ul class="rows">${c.stats.map((s, i) => `<li data-stat="${i}">
+                <label>Number<input data-k="n" maxlength="14" value="${esc(s.n)}" placeholder="250k+" style="width:120px"></label>
+                <label class="grow">What it measures<input data-k="l" maxlength="60" value="${esc(s.l)}" placeholder="revenue generated"></label>
+                <label class="switch"><input type="checkbox" data-k="hot" ${s.hot ? "checked" : ""}><span>Highlight</span></label>
+                <div class="moves"><button type="button" class="icon-btn danger" data-rm aria-label="Remove result">✕</button></div></li>`).join("")}</ul>
+              ${c.stats.length < 4 ? `<button type="button" class="btn btn-light" data-add-stat>+ Add a result</button>` : ""}</div>
+            <div class="panel"><h3>The full story</h3>
+              <ul class="rows">${c.story.map((s, i) => `<li data-story="${i}" style="align-items:stretch">
+                <label class="grow">Heading<input data-k="h" maxlength="60" value="${esc(s.h)}"></label>
+                <label class="grow wide">Text<textarea data-k="p" rows="3" maxlength="1400">${esc(s.p)}</textarea></label>
+                <div class="moves"><button type="button" class="icon-btn danger" data-rm aria-label="Remove part">✕</button></div></li>`).join("")}</ul>
+              ${c.story.length < 6 ? `<button type="button" class="btn btn-light" data-add-story>+ Add a part</button>` : ""}</div>
+            <div class="panel"><h3>In the client's words</h3>
+              <div class="two-col"><label>Name or company<input name="qwho" maxlength="80" value="${esc(c.quote.who)}" placeholder="${esc(c.client || "Client")}"></label>
+                <label>Role<input name="qrole" maxlength="80" value="${esc(c.quote.role)}" placeholder="Head of Marketing"></label></div>
+              <label>Testimonial <span class="muted">(only publish words the client has approved)</span><textarea name="qsaid" rows="3" maxlength="700">${esc(c.quote.said)}</textarea></label>
+              <label>Clicksyde's reply <span class="muted">(optional)</span><textarea name="reply" rows="2" maxlength="700">${esc(c.reply)}</textarea></label>
+            </div>
+          </div>
+          <div class="ed-side">
+            <div class="panel"><h3>Publishing</h3>
+              <label class="switch"><input type="checkbox" name="published" ${c.published !== false ? "checked" : ""}><span>Published on the Work page</span></label>
+              <label>Client colour<input type="color" name="color" value="${isHex(c.color) ? c.color : "#2B2B2B"}"></label>
+            </div>
+            <div class="row-end">${isNew ? "" : `<button type="button" class="btn btn-ghost danger" data-del>Delete</button>`}<button class="btn btn-brand" type="submit">${isNew ? "Save case study" : "Save changes"}</button></div>
+          </div>
+        </form>`;
+      showMedia(view());
+      const f = $(".case-form");
+      f.client.oninput = () => { if (!slugTouched) f.id.value = slugify(f.client.value).slice(0, 40); };
+      f.id.oninput = () => { slugTouched = true; };
+      const rows = (attr, arr) => $$(`[${attr}]`).forEach((row) => {
+        const i = +row.getAttribute(attr);
+        const up = $("[data-up]", row), down = $("[data-down]", row), rm = $("[data-rm]", row);
+        if (up) up.onclick = () => { read(); [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; draw(); };
+        if (down) down.onclick = () => { read(); [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]]; draw(); };
+        if (rm) rm.onclick = () => { read(); arr.splice(i, 1); draw(); };
+      });
+      rows("data-slide", c.slides); rows("data-stat", c.stats); rows("data-story", c.story);
+      $$("[data-slide]").forEach((row) => {
+        const s = c.slides[+row.dataset.slide];
+        const b = $("[data-media]", row);
+        b.onclick = () => pick("image/*,video/mp4,video/webm", async (file) => {
+          read(); busy(b, true);
+          try { s.media = await api.uploadMedia(file, "cases"); s.type = file.type.startsWith("video") ? "video" : "image"; draw(); toast("Added. Save to put it on the site."); }
+          catch (err) { fail(err); busy(b, false); }
+        });
+        const nm = $("[data-nomedia]", row); if (nm) nm.onclick = () => { read(); s.media = ""; draw(); };
+      });
+      const add = (sel, arr, item) => { const b = $(sel); if (b) b.onclick = () => { read(); arr.push(item()); draw(); }; };
+      add("[data-add-slide]", c.slides, () => ({ c: c.color || "#2B2B2B", cap: "", big: "", media: "", type: "image" }));
+      add("[data-add-stat]", c.stats, () => ({ n: "", l: "", hot: false }));
+      add("[data-add-story]", c.story, () => ({ h: "", p: "" }));
+      const del = $("[data-del]");
+      if (del) del.onclick = async () => {
+        if (!confirm(`Delete the ${c.client} case study? This can't be undone.`)) return;
+        site.cases = site.cases.filter((x) => x.id !== c.id);
+        try { await api.saveSite(site); toast("Case study deleted."); location.hash = "#cases"; } catch (err) { fail(err); }
+      };
+      f.onsubmit = async (e) => {
+        e.preventDefault(); read();
+        if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(c.id)) return toast("The web address can only use lowercase letters, numbers and dashes.", true);
+        if (isNew && site.cases.some((x) => x.id === c.id)) return toast("Another case study already uses that web address.", true);
+        c.client = c.client.trim(); c.title = c.title.trim() || c.client;
+        c.slides.forEach((s) => { s.big = (s.big || "").split(" / ").join("\n").trim(); });
+        c.stats = c.stats.filter((s) => s.n.trim());
+        c.story = c.story.filter((s) => s.h.trim() || s.p.trim());
+        if (isNew) site.cases.push(c); else site.cases[site.cases.findIndex((x) => x.id === c.id)] = c;
+        try { await api.saveSite(site); toast(c.published ? "Saved and live on the Work page." : "Draft saved."); location.hash = "#cases"; } catch (err) { fail(err); }
+      };
+    };
+    draw();
+  }
+
   /* ---------- Page copy: edited on the page itself (js/editor.js) ---------- */
   const PAGES = [["home", "index.html", "Home"], ["services", "services.html", "Services"], ["work", "work.html", "Work"],
     ["insights", "insights.html", "Insights"], ["about", "about.html", "About"], ["start", "start.html", "Contact"]];
@@ -763,7 +912,7 @@
         ${count(id) ? `<button class="linkish" data-reset="${id}">Back to original</button>` : ""}</li>`).join("")}</ul>
       <div class="panel"><h3>How it works</h3>
         <p class="small muted" style="margin:0">Each page opens with its text outlined. Click a text and type; press Enter to finish a line. <b>Original wording</b> puts back the text the site launched with. Nothing changes for visitors until you press <b>Save</b>${mode === "demo" ? " (in demo mode, saving only affects this browser)" : ""}.</p>
-        <p class="small muted" style="margin:0">Services, articles, media, the team, client logos and contact details have their own sections in this admin. Case studies and the About page facts are still edited in the website's code.</p></div>`;
+        <p class="small muted" style="margin:0">Services, case studies, articles, media, the team, client logos and contact details have their own sections in this admin. The About page facts are still edited in the website's code.</p></div>`;
     $$("[data-reset]").forEach((b) => (b.onclick = async () => {
       const id = b.dataset.reset;
       if (!confirm(`Put every text on ${PAGES.find((p) => p[0] === id)[2]} back to its original wording?`)) return;

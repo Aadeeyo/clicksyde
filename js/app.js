@@ -337,46 +337,54 @@
 
   /* ----- 03 WORK: feed of case studies, each followed by the client's comments ----- */
   R.work = () => {
-    const liked = new Set(JSON.parse(safeGet("cs-likes") || "[]"));
+    const initials = (name) => esc(String(name || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase());
+    if (!D.cases.length) {
+      $(".jump").innerHTML = ""; $(".feed-filters").innerHTML = "";
+      $(".feed").innerHTML = `<p class="lead">New case studies are on the way. <a href="start.html">Start a project</a> and you could be next.</p>`;
+      return;
+    }
     $(".jump").innerHTML = D.cases.map((c) => `
-      <a href="#${c.id}"><span class="th" style="background:linear-gradient(135deg, ${c.slides[0][0]}, ${c.color})"></span>
+      <a href="#${esc(c.id)}"><span class="th" style="background:linear-gradient(135deg, ${(c.slides[0] || {}).c || c.color}, ${c.color})"></span>
       <span><b>${esc(c.client)}</b><small>${esc(c.sub)}</small></span><span aria-hidden="true">↓</span></a>`).join("");
 
-    const cats = [["all", "All work"], ["feedback", "Customer feedback"], ["ads", "Performance"], ["show", "Content & activations"]];
-    $(".feed-filters").innerHTML = cats.map(([k, l], i) => `<button class="chip" data-f="${k}" aria-pressed="${i === 0}">${l}</button>`).join("");
+    const used = new Set(D.cases.map((c) => c.cat));
+    const cats = [["all", "All work"], ...D.caseCats.filter(([k]) => used.has(k))];
+    $(".feed-filters").innerHTML = cats.length > 2 ? cats.map(([k, l], i) => `<button class="chip" data-f="${k}" aria-pressed="${i === 0}">${l}</button>`).join("") : "";
 
     $(".feed").innerHTML = D.cases.map((c, ci) => `
-      <article class="case rv" id="${c.id}" data-cat="${c.cat}">
-        <div class="carousel">
-          <div class="slides" tabindex="0" aria-label="${esc(c.client)} images">${c.slides.map(([col, cap, big]) => `
-            <div class="slide" style="background:linear-gradient(150deg, ${col}, #161616 140%)">
-              <div class="big">${esc(big).replace(/\n/g, "<br>")}</div><span class="cap">${esc(cap)}</span></div>`).join("")}
+      <article class="case rv" id="${esc(c.id)}" data-cat="${c.cat}">
+        ${c.slides.length ? `<div class="carousel">
+          <div class="slides" tabindex="0" aria-label="${esc(c.client)} images">${c.slides.map((sl) => `
+            <div class="slide${sl.media ? " has-media" : ""}" style="background:linear-gradient(150deg, ${sl.c}, #161616 140%)">
+              ${sl.media ? (sl.type === "video" ? `<video class="slide-media" data-media="${esc(sl.media)}" muted loop playsinline autoplay preload="metadata"></video>` : `<img class="slide-media" data-media="${esc(sl.media)}" alt="">`) : ""}
+              ${sl.big ? `<div class="big">${esc(sl.big).replace(/\n/g, "<br>")}</div>` : ""}${sl.cap ? `<span class="cap">${esc(sl.cap)}</span>` : ""}</div>`).join("")}
           </div>
-          <div class="dots">${c.slides.map((_, i) => `<button aria-label="Image ${i + 1}" aria-current="${i === 0}"></button>`).join("")}</div>
-        </div>
+          ${c.slides.length > 1 ? `<div class="dots">${c.slides.map((_, i) => `<button aria-label="Image ${i + 1}" aria-current="${i === 0}"></button>`).join("")}</div>` : ""}
+        </div>` : ""}
         <div class="case-body">
           <div class="byline">
-            <div class="avatars"><span>${mark()}</span><span style="background:${c.color}">${esc(c.initials)}</span></div>
+            <div class="avatars"><span>${mark()}</span><span style="background:${c.color}">${initials(c.client)}</span></div>
             <div><b>Clicksyde</b> <span class="with">with</span> <b>${esc(c.client)}</b>
               <div class="meta">${c.tags.map(esc).join(" · ")}</div></div>
           </div>
-          <h2>${esc(c.title)}</h2><p class="sub">${esc(c.sub)}</p>
-          <div class="stats">${c.stats.map(([ic, n, l, hot]) => `<div class="stat ${hot ? "hot" : ""}"><span class="ic" aria-hidden="true">${ic}</span><b data-count>${esc(n)}</b><span>${esc(l)}</span></div>`).join("")}</div>
-          <button class="btn story-toggle" aria-expanded="false" aria-controls="story-${ci}">Read the full story <span aria-hidden="true">＋</span></button>
-          <div class="story" id="story-${ci}"><div>${c.story.map(([h, p]) => `<div class="chunk"><h4>${esc(h)}</h4><p>${esc(p)}</p></div>`).join("")}</div></div>
+          <h2>${esc(c.title)}</h2>${c.sub ? `<p class="sub">${esc(c.sub)}</p>` : ""}
+          ${c.stats.length ? `<div class="stats">${c.stats.map((st) => `<div class="stat ${st.hot ? "hot" : ""}"><b data-count>${esc(st.n)}</b><span>${esc(st.l)}</span></div>`).join("")}</div>` : ""}
+          ${c.story.length ? `<button class="btn story-toggle" aria-expanded="false" aria-controls="story-${ci}">Read the full story <span aria-hidden="true">＋</span></button>
+          <div class="story" id="story-${ci}"><div>${c.story.map((st) => `<div class="chunk">${st.h ? `<h4>${esc(st.h)}</h4>` : ""}<p>${esc(st.p)}</p></div>`).join("")}</div></div>` : ""}
         </div>
-        <div class="thread" aria-label="Client feedback">
+        ${c.quote.said ? `<div class="thread" aria-label="Client feedback">
           <div class="th-head"><span>In the client's words</span></div>
-          ${c.comments.map((m, mi) => {
-            const key = c.id + mi, on = liked.has(key);
-            return `<div class="comment ${m.reply ? "reply" : ""}">
-              <div class="av" style="background:${m.brand ? "var(--brand)" : m.color}">${m.brand ? mark() : esc(m.initials)}</div>
-              <div><div class="who"><b>${esc(m.who)}</b><span class="role">${esc(m.role)}</span>${m.pinned ? '<span class="pin">Client</span>' : ""}</div>
-                <p class="said">${esc(m.said)}</p>
-                <button class="like" data-key="${key}" data-n="${m.likes}" aria-pressed="${on}">${icons.heart}<span>${on ? m.likes + 1 : m.likes}</span> Like</button></div>
-            </div>`; }).join("")}
+          <div class="comment">
+            <div class="av" style="background:${c.color}">${initials(c.quote.who || c.client)}</div>
+            <div><div class="who"><b>${esc(c.quote.who || c.client)}</b>${c.quote.role ? `<span class="role">${esc(c.quote.role)}</span>` : ""}<span class="pin">Client</span></div>
+              <p class="said">${esc(c.quote.said)}</p></div>
+          </div>
+          ${c.reply ? `<div class="comment reply">
+            <div class="av">${mark()}</div>
+            <div><div class="who"><b>Clicksyde</b><span class="role">Replying</span></div><p class="said">${esc(c.reply)}</p></div>
+          </div>` : ""}
           <div class="add-comment"><a href="start.html">Want a comment like this? Start your project →</a></div>
-        </div>
+        </div>` : ""}
       </article>`).join("");
 
     // carousel dots follow the swipe
@@ -393,13 +401,6 @@
       b.setAttribute("aria-expanded", open);
       $("#" + b.getAttribute("aria-controls")).classList.toggle("open", open);
       b.lastElementChild.textContent = open ? "−" : "＋";
-    }));
-    $$(".like").forEach((b) => b.addEventListener("click", () => {
-      const on = b.getAttribute("aria-pressed") !== "true";
-      b.setAttribute("aria-pressed", on);
-      $("span", b).textContent = Number(b.dataset.n) + (on ? 1 : 0);
-      on ? liked.add(b.dataset.key) : liked.delete(b.dataset.key);
-      safeSet("cs-likes", JSON.stringify([...liked]));
     }));
     $(".feed-filters").addEventListener("click", (e) => {
       const c = e.target.closest(".chip"); if (!c) return;

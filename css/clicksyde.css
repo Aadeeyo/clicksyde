@@ -784,6 +784,13 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.042em; }
 .member .ph.has-photo { padding: 0; }
 .member .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* case study slides with an image or video from the admin */
+.slide { position: relative; overflow: hidden; }
+.slide .slide-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slide.has-media .big { position: relative; z-index: 1; }
+.slide.has-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(23,21,18,.55)); }
+.slide .cap { z-index: 2; }
+
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }
 .featured .art, .post .art { position: relative; overflow: hidden; }

@@ -47,6 +47,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Newsletter | The Syde Note sign-ups; unsubscribe / resubscribe, export the active list as CSV |
 | Blog | Write, edit, publish, unpublish, feature and delete Insights articles, with a cover colour, cover text or uploaded cover image |
 | Services | Add, edit, reorder and delete the sticky notes on the Services wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
+| Case studies | Add, edit, reorder, publish/unpublish and delete the case studies on the Work page: client, headline, summary, tags and filter, slides (caption, big text, colour, image or video), results, the full story, the client testimonial and Clicksyde's reply |
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
 | Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |
@@ -69,7 +70,7 @@ What the admin saves is loaded by `js/content.js` on top of `js/data.js`. If the
 
 **Video uploads (live).** Run `supabase/migrations/20261127000000_clicksyde_media.sql` once so the media bucket accepts MP4/WebM up to 50 MB (the Supabase free plan's upload limit). In demo mode, uploaded media is kept in the browser (IndexedDB).
 
-Not in the admin yet (still edited in `js/data.js`): case studies and comments, the About page fun facts, values and timeline, the wording of the problem-finder problems, and the contact form questions.
+Not in the admin yet (still edited in `js/data.js`): the About page fun facts, values and timeline, the wording of the problem-finder problems, and the contact form questions.
 
 ## To add before launch
 

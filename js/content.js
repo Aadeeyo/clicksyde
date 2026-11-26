@@ -64,6 +64,34 @@
   })();
   window.CSmedia = IDB;
 
+  /* Case studies: data.js keeps compact lists; the site and admin use named fields */
+  const CASE_CATS = [["feedback", "Customer feedback"], ["ads", "Performance"], ["show", "Content & activations"]];
+  const normCase = (c) => {
+    if (!c || !Array.isArray(c.slides) || !c.slides.length || !Array.isArray(c.slides[0])) return c;
+    const quote = (c.comments || []).find((m) => !m.reply) || {};
+    const reply = (c.comments || []).find((m) => m.reply);
+    return {
+      id: c.id, client: c.client, color: c.color, tags: c.tags || [], cat: c.cat, title: c.title, sub: c.sub, published: true,
+      slides: c.slides.map(([col, cap, big]) => ({ c: col, cap, big, media: "", type: "image" })),
+      stats: (c.stats || []).map(([, n, l, hot]) => ({ n, l, hot: !!hot })),
+      story: (c.story || []).map(([h, p]) => ({ h, p })),
+      quote: { who: quote.who || c.client, role: quote.role || "", said: quote.said || "" },
+      reply: reply ? reply.said : ""
+    };
+  };
+  const cleanCase = (c, allowDemo) => ({
+    id: c.id, client: plain(c.client, 80), color: isHex(c.color) ? c.color : "#2B2B2B",
+    tags: (Array.isArray(c.tags) ? c.tags : []).map((t) => plain(t, 40)).filter(Boolean).slice(0, 4),
+    cat: CASE_CATS.some(([k]) => k === c.cat) ? c.cat : "show",
+    title: plain(c.title, 120) || plain(c.client, 80), sub: plain(c.sub, 200), published: c.published !== false,
+    slides: (Array.isArray(c.slides) ? c.slides : []).slice(0, 6).map((s) => ({
+      c: isHex(s.c) ? s.c : "#2B2B2B", cap: plain(s.cap, 40), big: plain(s.big, 60), media: mediaSrc(s.media, allowDemo), type: s.type === "video" ? "video" : "image" })),
+    stats: (Array.isArray(c.stats) ? c.stats : []).slice(0, 4).map((s) => ({ n: plain(s.n, 14), l: plain(s.l, 60), hot: !!s.hot })).filter((s) => s.n),
+    story: (Array.isArray(c.story) ? c.story : []).slice(0, 6).map((s) => ({ h: plain(s.h, 60), p: plain(s.p, 1400) })).filter((s) => s.h || s.p),
+    quote: { who: plain(c.quote && c.quote.who, 80), role: plain(c.quote && c.quote.role, 80), said: plain(c.quote && c.quote.said, 700) },
+    reply: plain(c.reply, 700)
+  });
+
   const cleanContact = (c) => {
     const out = {};
     if (typeof c.email === "string" && /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(c.email)) out.email = c.email;
@@ -126,6 +154,9 @@
           D.reel = site.reel.frames.slice(0, 12).map((f) => ({ c: isHex(f.c) ? f.c : "#2B2B2B", cap: plain(f.cap, 40), img: mediaSrc(f.img, allowData) }));
         }
       }
+      if (Array.isArray(site.cases)) {
+        D.cases = site.cases.filter((c) => c && c.published !== false && c.client && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(c.id || "")).map((c) => cleanCase(c, allowData));
+      }
       if (Array.isArray(site.team)) {
         D.team = site.team.filter((m) => m && m.n).slice(0, 40).map((m) => ({
           n: plain(m.n, 80), r: plain(m.r, 80), odd: plain(m.odd, 160), c: isHex(m.c) ? m.c : "#171512", photo: mediaSrc(m.photo, allowData)
@@ -166,6 +197,8 @@
   }
   // Clients from data.js use bare file names; give them a src too so app.js has one shape to render.
   D.clients = D.clients.map((c) => ({ n: c.n, src: imgSrc(c.logo, false) }));
+  D.cases = D.cases.map((c) => cleanCase(normCase(c), false));
+  D.caseCats = CASE_CATS;
   D.reel = D.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f));
   D.team = D.team.map((m) => Object.assign({ photo: "" }, m));
 
@@ -191,7 +224,7 @@
   }
   const readDemo = () => { try { return JSON.parse(local.get(DEMO_KEY)) || null; } catch (_) { return null; } };
   const writeDemo = (s) => local.set(DEMO_KEY, JSON.stringify(s));
-  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, mediaSrc, month, cleanCopy };
+  window.CSstore = { read: readDemo, write: writeDemo, seed, reset: () => local.del(DEMO_KEY), defaults: D0, imgSrc, mediaSrc, month, cleanCopy, normCase, caseCats: CASE_CATS };
 
   if (document.body.dataset.page === "admin") return; // the admin panel only needs the store
 

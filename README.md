@@ -32,6 +32,16 @@ Each page is a **chapter** that answers one question a prospective client has. E
 
 The original storybook (reel-wall hero, sticky-note wall, bottom dock), made subtly richer and kept distinct from the Bvndle / BRF sites: Manrope with Fraunces italics for emphasis, warm near-black and soft white with Clicksyde orange, soft-cornered buttons with a little depth, layered soft shadows, a dark-glass dock and a straight, calmer reel wall. The finish lives in the "SUBTLY RICH FINISH" block of `css/clicksyde.css`.
 
+## Deploying (Netlify)
+
+1. In Netlify: **Add new site → Import an existing project → GitHub → Aadeeyo/clicksyde**. `netlify.toml` sets everything: build command `node build.mjs`, publish folder `dist`. Then add the `clicksyde.com` domain under **Domain management**.
+2. `build.mjs` reads what the admin saved in Supabase (falling back to `js/data.js`), copies the site and writes a page for every article (`/insights/<slug>`), case study (`/work/<slug>`) and service (`/services/<id>`), plus `sitemap.xml`. Try it locally with `node build.mjs`, then `npx serve dist`.
+3. **Rebuild when the admin saves** (so the article, case study and service pages and the sitemap stay current):
+   - Netlify: **Site configuration → Build & deploy → Build hooks → Add build hook** ("Admin saves"), copy its URL.
+   - Supabase: **Database → Webhooks → Create a new hook** on table `site_content` (insert, update), type HTTP Request, method POST, URL = the build hook. Add a second hook on `posts` (insert, update, delete).
+   Everything else on the site picks up admin changes instantly; the generated pages follow about a minute later.
+4. `netlify.toml` also redirects the current clicksyde.com pages (`/about/`, `/services/`, `/projects/`, `/contact/`) to their new homes, so their search rankings carry over, and sets security headers.
+
 ## SEO
 
 In place: keyword-led titles and descriptions per page (editable in admin > SEO), canonical URLs, Open Graph / X share tags with `assets/share.jpg` (1200x630), Organization + ProfessionalService + WebSite structured data on the home page, `robots.txt`, `sitemap.xml`, a branded `404.html`, alt text on content images, and `noindex` on demo, edit and preview links. URLs assume the site runs at `https://clicksyde.com/` with `.html` addresses: if the host serves clean URLs (`/services`), update the canonical tags and `sitemap.xml` to match, and update `<lastmod>` when pages change.

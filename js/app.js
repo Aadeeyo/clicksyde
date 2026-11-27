@@ -307,7 +307,7 @@
         <h4>What you get</h4><ul>${s.get.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>
         <h4>Great for</h4><div class="tags">${s.for.map((g) => `<span>${esc(g)}</span>`).join("")}</div>
         <div class="acts"><a class="btn btn-dark" href="start.html?service=${s.id}#talk">I need this <span class="arr">→</span></a>
-          <a class="btn btn-ghost" href="work.html">See it in action</a></div>
+          <a class="btn btn-ghost" href="services/${s.id}">Full details</a></div>
         <div class="nav"><button data-go="-1">← Previous note</button><button data-go="1">Next note →</button></div>`;
       $(".x", sheet).onclick = hide;
       $$("[data-go]", sheet).forEach((b) => (b.onclick = () => show(open + Number(b.dataset.go))));
@@ -385,6 +385,7 @@
           ${c.stats.length ? `<div class="stats">${c.stats.map((st) => `<div class="stat ${st.hot ? "hot" : ""}"><b data-count>${esc(st.n)}</b><span>${esc(st.l)}</span></div>`).join("")}</div>` : ""}
           ${c.story.length ? `<button class="btn story-toggle" aria-expanded="false" aria-controls="story-${ci}">Read the full story <span aria-hidden="true">＋</span></button>
           <div class="story" id="story-${ci}"><div>${c.story.map((st) => `<div class="chunk">${st.h ? `<h4>${esc(st.h)}</h4>` : ""}<p>${esc(st.p)}</p></div>`).join("")}</div></div>` : ""}
+          <a class="case-link" href="work/${esc(c.id)}">Open the full case study <span aria-hidden="true">→</span></a>
         </div>
         ${c.quote.said ? `<div class="thread" aria-label="Client feedback">
           <div class="th-head"><span>In the client's words</span></div>
@@ -432,16 +433,16 @@
     const art = (p, big) => p.image ? `<img class="cover" src="${esc(p.image)}" alt="${esc(p.title)}">` : big ? `<span class="big">${esc(p.art)}</span>` : esc(p.art);
     const f = D.posts.find((p) => p.featured) || D.posts[0];
     const meta = (p) => `<div class="post-meta"><span class="cat">${esc(p.cat)}</span><span>${p.mins} min read</span><span>·</span><span>${esc(p.date)}</span></div>`;
-    $(".featured-slot").innerHTML = `<button class="featured rv" data-id="${esc(f.id)}">
+    $(".featured-slot").innerHTML = `<a class="featured rv" href="insights/${esc(f.id)}" data-id="${esc(f.id)}">
       <div class="art" style="background:${f.color}">${art(f, true)}</div>
       <div class="txt">${meta(f)}<h2>${esc(f.title)}</h2><p class="muted" style="margin:0">${esc(f.ex)}</p>
-      <span class="btn btn-dark" style="align-self:flex-start;margin-top:8px">Read it <span class="arr">→</span></span></div></button>`;
+      <span class="btn btn-dark" style="align-self:flex-start;margin-top:8px">Read it <span class="arr">→</span></span></div></a>`;
     const rest = D.posts.filter((p) => p !== f);
     const cats = ["All", ...new Set(D.posts.map((p) => p.cat))];
     $(".feed-filters").innerHTML = cats.map((c, i) => `<button class="chip" data-f="${esc(c)}" aria-pressed="${i === 0}">${esc(c)}</button>`).join("");
-    $(".posts").innerHTML = rest.map((p, i) => `<button class="post rv rv-d${i % 3}" data-id="${esc(p.id)}" data-cat="${esc(p.cat)}">
+    $(".posts").innerHTML = rest.map((p, i) => `<a class="post rv rv-d${i % 3}" href="insights/${esc(p.id)}" data-id="${esc(p.id)}" data-cat="${esc(p.cat)}">
       <div class="art" style="background:${p.color}">${art(p)}</div>
-      <div class="txt">${meta(p)}<h3>${esc(p.title)}</h3><p>${esc(p.ex)}</p></div></button>`).join("");
+      <div class="txt">${meta(p)}<h3>${esc(p.title)}</h3><p>${esc(p.ex)}</p></div></a>`).join("");
     $(".feed-filters").addEventListener("click", (e) => {
       const c = e.target.closest(".chip"); if (!c) return;
       $$(".feed-filters .chip").forEach((x) => x.setAttribute("aria-pressed", x === c));
@@ -475,7 +476,8 @@
     reader.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) close(); });
     document.addEventListener("click", (e) => {
       const b = e.target.closest(".post, .featured"); if (!b) return;
-      opener = b; open(b.dataset.id);
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // new tab: go to the article's own page
+      e.preventDefault(); opener = b; open(b.dataset.id);
     });
     const h = D.posts.find((p) => "#" + p.id === location.hash);
     if (h) setTimeout(() => open(h.id), 300);

@@ -20,6 +20,48 @@
     if (D.copy && typeof D.copy[k] === "string" && D.copy[k]) el.innerHTML = D.copy[k];
   });
 
+  /* ---------- Analytics (GA4) with consent, and conversion events ---------- */
+  const track = (name, params) => { try { if (window.gtag) window.gtag("event", name, params || {}); } catch (_) {} };
+  window.CStrack = track;
+  const gaId = D.analytics && /^G-[A-Z0-9]{4,14}$/.test(D.analytics.ga4 || "") ? D.analytics.ga4 : "";
+  const qs0 = new URLSearchParams(location.search);
+  const analyticsOn = gaId && !D.demo && !qs0.has("edit") && page !== "admin";
+  const loadGA = () => {
+    if (window.gtag || !analyticsOn) return;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", gaId, { anonymize_ip: true });
+    const s = document.createElement("script"); s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(gaId);
+    document.head.appendChild(s);
+  };
+  const consentBanner = () => {
+    if (document.querySelector(".consent")) return;
+    const c = document.createElement("div");
+    c.className = "consent"; c.setAttribute("role", "dialog"); c.setAttribute("aria-label", "Cookies");
+    c.innerHTML = `<p>We use analytics cookies to see which pages help people and improve the site. Nothing is shared for advertising. <a href="privacy.html">Privacy</a></p>
+      <div class="consent-acts"><button class="btn btn-light" data-c="denied">Decline</button><button class="btn btn-dark" data-c="granted">Accept</button></div>`;
+    document.body.appendChild(c);
+    c.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-c]"); if (!b) return;
+      safeSet("cs-consent", b.dataset.c); c.remove();
+      if (b.dataset.c === "granted") loadGA();
+    });
+  };
+  if (analyticsOn) {
+    const choice = safeGet("cs-consent");
+    if (choice === "granted") loadGA(); else if (choice !== "denied") consentBanner();
+  }
+  // contact clicks anywhere on the site (email, WhatsApp, phone)
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[href]"); if (!a) return;
+    const h = a.getAttribute("href");
+    if (/^mailto:/i.test(h)) track("contact_click", { method: "email", location: page });
+    else if (/wa\.me\//i.test(h)) track("contact_click", { method: "whatsapp", location: page });
+    else if (/^tel:/i.test(h)) track("contact_click", { method: "phone", location: page });
+    else if (/start\.html/.test(h) && page !== "talk") track("cta_click", { location: page, text: a.textContent.trim().slice(0, 40) });
+  });
+
   /* Search titles and descriptions set in the admin (SEO) */
   const seo = D.seo && D.seo[page];
   if (seo) {
@@ -133,9 +175,12 @@
         ${[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["x", "X"], ["tiktok", "TikTok"]].map(([k, t]) =>
           `<li><a href="${esc(D.contact[k])}" target="_blank" rel="noopener">${t}</a></li>`).join("")}</ul></div>
     </div>
-    <div class="legal"><span>© ${new Date().getFullYear()} Clicksyde. All rights reserved.</span><span>Lagos, Nigeria</span></div>
+    <div class="legal"><span>© ${new Date().getFullYear()} Clicksyde. All rights reserved.</span><span><a href="privacy.html">Privacy</a>${analyticsOn ? ` · <button class="linkish-foot" data-cookies>Cookie settings</button>` : ""} · Lagos, Nigeria</span></div>
   </div>`;
   document.body.appendChild(footer);
+  const cookieBtn = footer.querySelector("[data-cookies]");
+  if (cookieBtn) cookieBtn.addEventListener("click", () => { safeSet("cs-consent", ""); consentBanner(); });
+  $$("[data-contact-email]").forEach((el) => { el.href = "mailto:" + D.contact.email; el.textContent = D.contact.email; });
 
   /* ---------- Global: Escape closes overlays, scroll progress, reveal on scroll ---------- */
   const overlays = [];
@@ -494,6 +539,7 @@
       const saved = await save("subscribers", { email: email.toLowerCase(), source: location.pathname });
       btn.disabled = false;
       if (!saved) { note.textContent = "Sign-ups aren't open yet. Please try again soon."; return; }
+      track("sign_up", { method: "newsletter", location: page });
       form.innerHTML = `<span style="padding:12px 16px;color:var(--ink);font-weight:600">You're on the list. The first issue is on its way.</span>`;
       note.textContent = "";
     });
@@ -619,6 +665,7 @@
             budget: ans.budget, timeline: ans.when, contact: ans.contact, about: ans.about || null, page: location.pathname
           });
           pane.remove(); reply(ans.contact, 3); setBar(4);
+          track("generate_lead", { service: ans.service || "", budget: ans.budget, timeline: ans.when, needs: ans.need.join(", ").slice(0, 100), saved: !!saved });
           done(saved);
         };
       }

@@ -80,6 +80,8 @@
       cases: Array.isArray(d.cases) ? d.cases : D0.cases.map((c) => S.normCase(clone(c))),
       logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
       seo: d.seo && typeof d.seo === "object" ? d.seo : {},
+      seoItems: d.seoItems && typeof d.seoItems === "object" ? d.seoItems : {},
+      analytics: { ga4: (d.analytics && d.analytics.ga4) || "" },
       finish: d.finish === "luxe" ? "luxe" : "standard",
       postsManaged: !!d.postsManaged
     };
@@ -464,13 +466,31 @@
     if (empty) empty.onclick = () => { if (confirm("The Insights page will be empty until you publish an article. Continue?")) manage(false); };
   }
 
+  /* per-item search title/description, stored in site_content.seoItems["post:<id>" | "case:<id>" | "service:<id>"] */
+  const seoPanel = (site, key) => {
+    const v = (site.seoItems && site.seoItems[key]) || {};
+    return `<div class="panel item-seo"><h3>Search (SEO)</h3><p class="small muted" style="margin:0">Optional. How this page appears in Google. Leave empty to use the title and summary.</p>
+      <label>Search title <span class="count" data-sc="title"></span><input data-seo="title" maxlength="70" value="${esc(v.title || "")}"></label>
+      <label>Search description <span class="count" data-sc="description"></span><textarea data-seo="description" rows="3" maxlength="170">${esc(v.description || "")}</textarea></label></div>`;
+  };
+  const bindSeo = () => $$(".item-seo [data-seo]").forEach((el) => {
+    const c = $(`.item-seo [data-sc=${el.dataset.seo}]`), max = el.dataset.seo === "title" ? 60 : 160;
+    const upd = () => { c.textContent = el.value.length ? `${el.value.length}/${max}` : ""; c.classList.toggle("over", el.value.length > max); };
+    el.addEventListener("input", upd); upd();
+  });
+  const setSeo = (site, key) => {
+    const t = ($(".item-seo [data-seo=title]") || {}).value || "", d = ($(".item-seo [data-seo=description]") || {}).value || "";
+    site.seoItems = site.seoItems || {};
+    if (t.trim() || d.trim()) site.seoItems[key] = { title: t.trim(), description: d.trim() }; else delete site.seoItems[key];
+  };
+
   const toText = (body) => (body || []).map(([t, x]) => (t === "h" ? "## " + x : t === "q" ? "> " + x : x)).join("\n\n");
   const fromText = (text) => text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean).map((b) =>
     b.startsWith("## ") ? ["h", b.slice(3).trim()] : b.startsWith("> ") ? ["q", b.slice(2).replace(/\n>\s?/g, " ").trim()] : ["p", b.replace(/\s*\n\s*/g, " ")]);
   const COLORS = ["#FF4306", "#161616", "#2B6CB0", "#26B3A6", "#F6A8C5", "#C9B6F2", "#FFE45C", "#00B8E6"];
 
   async function editor(id) {
-    const posts = await api.listPosts();
+    const [posts, siteForSeo] = await Promise.all([api.listPosts(), api.getSite()]);
     const isNew = id === "new";
     const found = posts.find((p) => p.id === id);
     if (!isNew && !found) { view().innerHTML = head("Article not found") + `<p><a href="#blog">← Back to the blog</a></p>`; return; }
@@ -504,6 +524,7 @@
             <div class="row"><label class="btn btn-light file">Upload cover image<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
               <button type="button" class="linkish" data-noimg ${p.image_url ? "" : "hidden"}>Remove image</button></div>
           </div>
+          ${seoPanel(siteForSeo, "post:" + p.id)}
           <div class="row-end">${isNew ? "" : `<button type="button" class="btn btn-ghost danger" data-del>Delete</button>`}<button class="btn btn-brand" type="submit">${isNew ? "Save article" : "Save changes"}</button></div>
         </div>
       </form>`;
@@ -545,12 +566,13 @@
           if (!site.postsManaged) { await api.importStarters(); await api.saveSite(Object.assign(site, { postsManaged: true })); }
         }
         await api.savePost(p, isNew);
+        { const st = await api.getSite(); const before = JSON.stringify(st.seoItems || {}); setSeo(st, "post:" + p.id); if (JSON.stringify(st.seoItems) !== before) await api.saveSite(st); }
         toast(p.published ? "Saved and live on Insights." : "Draft saved.");
         location.hash = "#blog/" + encodeURIComponent(p.id);
         if (!isNew) route();
       } catch (err) { fail(err); }
     };
-    preview();
+    preview(); bindSeo();
   }
 
   /* ---------- Services (sticky notes on The Wall) ---------- */
@@ -652,6 +674,7 @@
           <div class="panel"><h3>Problem finder</h3><p class="small muted" style="margin:0">Which problems on The Wall does this service fix? Picking a problem there lights up these notes.</p>
             ${site.problems.map((p, i) => `<label class="switch"><input type="checkbox" name="prob" value="${i}" ${s.id && p.ids.includes(s.id) ? "checked" : ""}><span>${esc(p.p)} <span class="muted small">${esc(p.h)}</span></span></label>`).join("")}
           </div>
+          ${seoPanel(site, "service:" + s.id)}
           <div class="row-end"><button class="btn btn-brand" type="submit">${isNew ? "Add to The Wall" : "Save changes"}</button></div>
         </div>
       </form>`;
@@ -677,9 +700,10 @@
       });
       if (isNew) site.services.push(next);
       else site.services[site.services.findIndex((x) => x.id === next.id)] = next;
+      setSeo(site, "service:" + next.id);
       try { await api.saveSite(site); toast(isNew ? "Added to The Wall." : "Service saved."); location.hash = "#services"; } catch (err) { fail(err); }
     };
-    preview();
+    preview(); bindSeo();
   }
 
   /* ---------- Media & spotlight ---------- */
@@ -895,6 +919,7 @@
       const f = $(".case-form");
       ["client", "title", "sub", "reply"].forEach((k) => { c[k] = f[k].value; });
       c.id = f.id.value.trim(); c.cat = f.cat.value; c.color = f.color.value; c.published = f.published.checked;
+      if ($(".item-seo")) setSeo(site, "case:" + c.id);
       c.tags = f.tags.value.split(",").map((t) => t.trim()).filter(Boolean);
       c.quote = { who: f.qwho.value, role: f.qrole.value, said: f.qsaid.value };
       $$("[data-slide]").forEach((row, i) => Object.assign(c.slides[i], { cap: $("[data-k=cap]", row).value, big: $("[data-k=big]", row).value, c: $("[data-k=c]", row).value }));
@@ -947,10 +972,11 @@
               <label class="switch"><input type="checkbox" name="published" ${c.published !== false ? "checked" : ""}><span>Published on the Work page</span></label>
               <label>Client colour<input type="color" name="color" value="${isHex(c.color) ? c.color : "#2B2B2B"}"></label>
             </div>
+            ${seoPanel(site, "case:" + c.id)}
             <div class="row-end">${isNew ? "" : `<button type="button" class="btn btn-ghost danger" data-del>Delete</button>`}<button class="btn btn-brand" type="submit">${isNew ? "Save case study" : "Save changes"}</button></div>
           </div>
         </form>`;
-      showMedia(view());
+      showMedia(view()); bindSeo();
       const f = $(".case-form");
       f.client.oninput = () => { if (!slugTouched) f.id.value = slugify(f.client.value).slice(0, 40); };
       f.id.oninput = () => { slugTouched = true; };
@@ -991,6 +1017,7 @@
         c.stats = c.stats.filter((s) => s.n.trim());
         c.story = c.story.filter((s) => s.h.trim() || s.p.trim());
         if (isNew) site.cases.push(c); else site.cases[site.cases.findIndex((x) => x.id === c.id)] = c;
+        setSeo(site, "case:" + c.id);
         try { await api.saveSite(site); toast(c.published ? "Saved and live on the Work page." : "Draft saved."); location.hash = "#cases"; } catch (err) { fail(err); }
       };
     };
@@ -1051,6 +1078,9 @@
           <label>Description <span class="count" data-c="description"></span><textarea data-k="description" rows="2" maxlength="170">${esc(val(id, "description"))}</textarea></label>
           ${seo[id] ? `<button class="linkish" data-reset>Back to the original</button>` : ""}</div>
         <div class="serp"><span class="serp-url">clicksyde.com${path ? " › " + esc(path.replace(".html", "")) : ""}</span><span class="serp-title"></span><span class="serp-desc"></span></div></li>`).join("")}</ul>
+      <div class="panel"><h3>Analytics</h3>
+        <p class="small muted" style="margin:0">Paste your Google Analytics 4 measurement ID (it starts with G-). Visitors are asked for consent first; analytics only loads if they accept. Tracked: page views, completed “Let's talk” forms (generate_lead), newsletter sign-ups (sign_up), email/WhatsApp/phone clicks (contact_click) and “Let's talk” button clicks (cta_click).</p>
+        <label>GA4 measurement ID<input data-ga4 placeholder="G-XXXXXXXXXX" value="${esc(site.analytics.ga4)}" maxlength="20" style="max-width:260px"></label></div>
       <div class="panel"><h3>Also in place</h3><p class="small muted" style="margin:0">Share previews (image, title and description) for WhatsApp, LinkedIn and X, a sitemap for Google, business details for search results, and hidden demo and edit links. After launch, add the site to Google Search Console and submit <code>clicksyde.com/sitemap.xml</code>.</p></div>`;
     const sync = (li) => {
       const t = $("[data-k=title]", li).value, d = $("[data-k=description]", li).value;
@@ -1067,6 +1097,9 @@
       if (r) r.onclick = async () => { delete seo[li.dataset.p]; try { await api.saveSite(site); toast("Back to the original wording."); seoScreen(); } catch (err) { fail(err); } };
     });
     $("[data-save]").onclick = async () => {
+      const ga = $("[data-ga4]").value.trim().toUpperCase();
+      if (ga && !/^G-[A-Z0-9]{4,14}$/.test(ga)) return toast("That doesn't look like a GA4 measurement ID (G-XXXXXXXXXX).", true);
+      site.analytics = { ga4: ga };
       $$("li[data-p]").forEach((li) => {
         const id = li.dataset.p, t = $("[data-k=title]", li).value.trim(), d = $("[data-k=description]", li).value.trim();
         if (t === defaults[id].title && d === defaults[id].description) delete seo[id];

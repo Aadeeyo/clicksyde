@@ -69,7 +69,8 @@ const clip = (t, n) => { t = String(t || "").replace(/\s+/g, " ").trim(); return
 const https = (u) => (/^https:\/\/[^\s"'<>]+$/.test(u || "") ? u : "");
 
 const index = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-const FONTS = index.match(/<link href="https:\/\/fonts\.googleapis\.com\/css2\?[^"]+" rel="stylesheet">/)[0];
+// generated pages don't use the hero wordmark font (Archivo), so leave it out of their font request
+const FONTS = index.match(/<link href="https:\/\/fonts\.googleapis\.com\/css2\?[^"]+" rel="stylesheet">/)[0].replace(/family=Archivo:[^&]+&/, "");
 const CSS = index.match(/css\/clicksyde\.css\?v=\d+/)[0];
 const SCRIPTS = index.match(/<script src="js\/data\.js[\s\S]*?<script src="js\/app\.js[^"]*"><\/script>/)[0];
 
@@ -126,7 +127,7 @@ function articlePage(p, all) {
   const urlPath = `/insights/${p.id}`;
   const c = [["Home", "/"], ["Insights", "/insights"], [p.title, urlPath]];
   return page({
-    urlPath, title: `${clip(p.title, 56)} | Clicksyde`, description: clip(p.ex || body.map((b) => b[1]).join(" "), 158), image: p.image, dataPage: "article",
+    urlPath, ...seoFor("post:" + p.id, `${clip(p.title, 56)} | Clicksyde`, clip(p.ex || body.map((b) => b[1]).join(" "), 158)), image: p.image, dataPage: "article",
     jsonld: { "@context": "https://schema.org", "@graph": [
       { "@type": "Article", headline: clip(p.title, 110), description: p.ex, image: https(p.image) || SITE + "/assets/share.jpg", datePublished: p.published_at, dateModified: p.updated_at || p.published_at,
         author: ORG, publisher: ORG, mainEntityOfPage: SITE + urlPath, articleSection: p.cat, inLanguage: "en-NG" }, crumbs(c)] },
@@ -153,7 +154,7 @@ function casePage(c, all) {
   const slide = (c.slides || []).find((s) => https(s.media) && s.type !== "video");
   const others = all.filter((x) => x.id !== c.id).slice(0, 3);
   return page({
-    urlPath, title: `${clip(c.client, 36)} Case Study | Clicksyde`, description: clip(`${c.sub || ""} ${(c.story || []).map((s) => s.p).join(" ")}`, 158), image: slide && slide.media, dataPage: "case",
+    urlPath, ...seoFor("case:" + c.id, `${clip(c.client, 36)} Case Study | Clicksyde`, clip(`${c.sub || ""} ${(c.story || []).map((s) => s.p).join(" ")}`, 158)), image: slide && slide.media, dataPage: "case",
     jsonld: { "@context": "https://schema.org", "@graph": [
       { "@type": "Article", headline: clip(`${c.client}: ${c.sub || c.title}`, 110), description: c.sub, image: (slide && slide.media) || SITE + "/assets/share.jpg",
         author: ORG, publisher: ORG, mainEntityOfPage: SITE + urlPath, about: { "@type": "Organization", name: c.client }, keywords: (c.tags || []).join(", ") }, crumbs(crumbsList)] },
@@ -183,7 +184,7 @@ function servicePage(s, all, problems) {
   const fixes = (problems || []).filter((p) => (p.ids || []).includes(s.id)).map((p) => p.p);
   const others = all.filter((x) => x.id !== s.id);
   return page({
-    urlPath, title: clip(`${s.t} in Lagos | Clicksyde`, 70), description: clip(`${s.s} ${s.body || ""}`, 158), dataPage: "service", ogType: "website",
+    urlPath, ...seoFor("service:" + s.id, clip(`${s.t} in Lagos | Clicksyde`, 70), clip(`${s.s} ${s.body || ""}`, 158)), dataPage: "service", ogType: "website",
     jsonld: { "@context": "https://schema.org", "@graph": [
       { "@type": "Service", name: s.t, serviceType: s.t, description: s.body || s.s, provider: { "@id": SITE + "/#organization" },
         areaServed: { "@type": "Country", name: "Nigeria" }, url: SITE + urlPath }, crumbs(crumbsList)] },
@@ -218,6 +219,8 @@ function copy(src, dst) {
 }
 
 const live = await fetchLive();
+const SEOI = (live.site && live.site.seoItems) || {};
+const seoFor = (key, title, description) => { const v = SEOI[key] || {}; return { title: str(v.title, 70) || title, description: str(v.description, 170) || description }; };
 const C = content(live);
 const problems = (live.site && Array.isArray(live.site.problems)) ? live.site.problems : D.problems;
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -229,7 +232,7 @@ C.posts.forEach((p) => write(`insights/${p.id}.html`, articlePage(p, C.posts)));
 C.cases.forEach((c) => write(`work/${c.id}.html`, casePage(c, C.cases)));
 C.services.forEach((s) => write(`services/${s.id}.html`, servicePage(s, C.services, problems)));
 
-const urls = [["/", "weekly", "1.0"], ["/services", "monthly", "0.9"], ["/work", "weekly", "0.9"], ["/insights", "weekly", "0.9"], ["/about", "monthly", "0.7"], ["/start", "monthly", "0.7"],
+const urls = [["/", "weekly", "1.0"], ["/services", "monthly", "0.9"], ["/work", "weekly", "0.9"], ["/insights", "weekly", "0.9"], ["/about", "monthly", "0.7"], ["/start", "monthly", "0.7"], ["/privacy", "yearly", "0.2"],
   ...C.services.map((s) => [`/services/${s.id}`, "monthly", "0.8"]),
   ...C.cases.map((c) => [`/work/${c.id}`, "monthly", "0.7"]),
   ...C.posts.map((p) => [`/insights/${p.id}`, "monthly", "0.7", p.updated_at || p.published_at])];

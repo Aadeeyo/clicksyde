@@ -48,7 +48,11 @@ In place: keyword-led titles and descriptions per page (editable in admin > SEO)
 
 **Google Search Console.** `google594a04185ccaba3f.html` in the site root is Google's ownership file. Keep it there, unchanged, after launch; deleting it un-verifies the site.
 
-Still to do (see the SEO plan): pre-rendering and separate pages for articles, case studies and key services; Google Search Console; Google Business Profile; directory listings; analytics with conversion events; 301 redirects from the current clicksyde.com pages at launch.
+Each article, case study and service can also have its own search title and description (the **Search (SEO)** panel in its editor). The generated pages use them; empty fields fall back to the title and summary.
+
+**Analytics and cookies.** Paste the Google Analytics 4 measurement ID (`G-…`) into admin > SEO > Analytics. Until a visitor accepts the cookie notice, nothing from Google loads; "Decline" is remembered, and "Cookie settings" in the footer changes the choice. Analytics never runs in demo, edit or preview mode. Events sent: `generate_lead` (Let's talk form completed), `sign_up` (newsletter), `contact_click` (email, WhatsApp or phone link, with the method) and `cta_click` (any Let's talk button). In GA4, mark `generate_lead` and `sign_up` as key events (Admin → Events). `privacy.html` explains what is collected under the Nigeria Data Protection Act 2023; **have it reviewed by a lawyer before launch** and update the retention periods if they differ.
+
+**Speed.** Only the font weights the site uses are loaded, and the condensed hero font (Archivo) only on the home page. Lighthouse (mobile, local): Performance 90, Accessibility 94, Best practices 96, SEO 92–100; Netlify's compression and caching should lift performance further. Re-check with PageSpeed Insights after launch.
 
 **Luxe finish.** Admin > Layout & brand > Finish switches between Standard and Luxe (add `?luxe=1` or `?luxe=0` to any page to preview either without saving). Luxe keeps the design and adds: calmer spacing, word-by-word headline reveals, images that unveil on scroll, a fine film grain, an espresso and sand palette with orange as the accent, serif numerals, refined buttons, and a short branded intro once per visit. Reduced-motion visitors and edit mode get the colours without the motion. Styles live in the "LUXE FINISH" block of `css/clicksyde.css`; motion in `luxeFinish()` in `js/app.js`.
 
@@ -70,7 +74,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Case studies | Add, edit, reorder, publish/unpublish and delete the case studies on the Work page: client, headline, summary, tags and filter, slides (caption, big text, colour, image or video), results, the full story, the client testimonial and Clicksyde's reply |
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
 | Contact form | Wording of the "Let's talk" chat (welcome line, the four questions, field labels and examples, Send button) and its answer options (needs, budgets, timelines). The four steps stay fixed so every lead fits the leads table |
-| SEO | Search title and description for each page, with a Google-style preview and character counts |
+| SEO | Search title and description for each page, with a Google-style preview and character counts, plus the Google Analytics 4 ID. Articles, case studies and services each have their own Search (SEO) panel in their editor |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
 | About page | Add, edit, reorder and remove the fun-fact flip cards (question, answer, label), the "Our story" timeline (year, heading, text) and the values (icon, heading, text) |
 | Team | Add, edit, reorder and remove people on the About page (name, role, one odd fact, colour, photo), e.g. when someone changes position |

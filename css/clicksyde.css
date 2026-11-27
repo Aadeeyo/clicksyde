@@ -5,7 +5,7 @@
   --brand-soft: #FFE9DF;
   --ink: #171512;            /* warm near-black */
   --ink-2: #3E3A34;
-  --muted: #7D776E;
+  --muted: #6F695F;
   --bg: #F7F6F3;
   --card: #FFFFFF;
   --line: #E6E3DD;
@@ -806,7 +806,7 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.042em; }
    an accent, film grain, serif numerals, refined buttons, masked reveals.
    ========================================================= */
 html.luxe {
-  --ink: #1C1612; --ink-2: #4A4038; --muted: #8A7F74; --bg: #F8F5EF; --line: #E7DED2;
+  --ink: #1C1612; --ink-2: #4A4038; --muted: #776C61; --bg: #F8F5EF; --line: #E7DED2;
   --sand: #EFE5D8; --cream: #FCFAF6; --brand-soft: #F8E7DC;
   --ease: cubic-bezier(.16, 1, .3, 1);
   --shadow: 0 1px 2px rgba(28,22,18,.04), 0 22px 48px -28px rgba(28,22,18,.28);
@@ -918,6 +918,23 @@ a.featured, a.post { color: inherit; text-decoration: none; }
 .gen-cta { padding: clamp(56px, 8vw, 104px) 0; background: var(--ink); color: #fff; }
 .gen-cta .wrap { display: grid; gap: 18px; justify-items: start; }
 .gen-cta .lead { color: rgba(255,255,255,.72); margin: 0; }
+
+/* cookie consent */
+.consent { position: fixed; left: 16px; right: 16px; bottom: 100px; z-index: 120; max-width: 560px; margin: 0 auto; display: grid; gap: 12px;
+  padding: 18px 20px; border-radius: 18px; background: var(--card, #fff); color: var(--ink); box-shadow: 0 24px 60px -24px rgba(23,21,18,.45), inset 0 0 0 1px var(--line); font-size: 15px; }
+.consent p { margin: 0; color: var(--ink-2); }
+.consent a { color: var(--ink); }
+.consent-acts { display: flex; gap: 10px; justify-content: flex-end; }
+.consent .btn { padding: 11px 18px; font-size: 14px; }
+.linkish-foot { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.site-footer .legal a { color: inherit; }
+
+/* privacy page */
+.legal-doc { max-width: 760px; }
+.legal-doc h2 { font-size: clamp(22px, 2.4vw, 28px); margin: 40px 0 12px; }
+.legal-doc p, .legal-doc li { color: var(--ink-2); line-height: 1.65; }
+.legal-doc ul { padding-left: 20px; display: grid; gap: 10px; }
+.legal-doc a { color: var(--ink); }
 
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }

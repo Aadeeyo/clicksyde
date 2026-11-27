@@ -9,6 +9,9 @@ window.CS = {
     x: "https://x.com/clicksyde", tiktok: "https://www.tiktok.com/@clicksyde",
   },
 
+  /* Google Analytics 4: set the measurement ID in the admin (SEO > Analytics). It only loads after a visitor accepts cookies. */
+  analytics: { ga4: "" },
+
   /* Where form answers and newsletter sign-ups are saved: the Clicksyde Supabase project.
      key = the project's publishable key (sb_publishable_...) or legacy anon key. Both are safe in a public page:
      the database only lets visitors ADD rows, never read them (supabase/migrations/20261125000000_clicksyde_leads.sql).

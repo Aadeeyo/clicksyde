@@ -173,6 +173,13 @@
         if (list(a.timeline, 10)) D.timeline = a.timeline.slice(0, 10).filter((t) => t && (t.h || t.p)).map((t) => ({ y: plain(t.y, 12), h: plain(t.h, 120), p: plain(t.p, 500) }));
         if (list(a.values, 8)) D.values = a.values.slice(0, 8).filter((v) => v && v.h).map((v) => ({ i: plain(v.i, 4), h: plain(v.h, 60), p: plain(v.p, 300) }));
       }
+      if (site.form && typeof site.form === "object") {
+        const f = site.form, opts = (a, n) => (Array.isArray(a) ? a.map((x) => plain(x, 80)).filter(Boolean).slice(0, n) : []);
+        Object.keys(D.form).forEach((k) => {
+          if (Array.isArray(D.form[k])) { const o = opts(f[k], k === "needs" ? 10 : 12); if (o.length) D.form[k] = o; }
+          else if (typeof f[k] === "string" && f[k].trim()) D.form[k] = plain(f[k], 300);
+        });
+      }
       if (Array.isArray(site.team)) {
         D.team = site.team.filter((m) => m && m.n).slice(0, 40).map((m) => ({
           n: plain(m.n, 80), r: plain(m.r, 80), odd: plain(m.odd, 160), c: isHex(m.c) ? m.c : "#171512", photo: mediaSrc(m.photo, allowData)
@@ -218,6 +225,18 @@
   D.reel = D.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f));
   D.team = D.team.map((m) => Object.assign({ photo: "" }, m));
   // About page lists: data.js keeps compact [a, b, c] rows; the site and admin use named fields
+  // "Let's talk" form wording: defaults here, overridden by admin > Contact form
+  D.form = {
+    intro: "Welcome. Four short questions, about a minute.",
+    q1: "What do you need help with? Pick as many as you like.", needs: D.questions.need.slice(),
+    q2: "Nice. Who are we talking to? Tell us about you and your business, like you'd text a friend.",
+    nameLabel: "Your name", bizLabel: "Business or brand", aboutLabel: "Anything we should know?",
+    aboutPlaceholder: "e.g. We sell skincare online and want to open a store in Abuja",
+    q3: "Thanks, {name}! Roughly what budget and timeline are you working with? No wrong answers, it just helps us plan.",
+    budgetLabel: "Budget", budgets: D.questions.budget.slice(), timelineLabel: "Timeline", timelineHint: "when do you need this?", timelines: D.questions.when.slice(),
+    q4: "Last one. Where can we reach you? We reply within one working day.",
+    contactLabel: "Email or WhatsApp number", contactPlaceholder: "you@brand.com or 0801 234 5678", send: "Send it"
+  };
   D.timeline = D.timeline.map((t) => (Array.isArray(t) ? { y: t[0], h: t[1], p: t[2] } : t));
   D.values = D.values.map((v) => (Array.isArray(v) ? { i: v[0], h: v[1], p: v[2] } : v));
 

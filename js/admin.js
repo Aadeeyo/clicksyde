@@ -71,6 +71,7 @@
         frames: d.reel && Array.isArray(d.reel.frames) && d.reel.frames.length ? d.reel.frames : D0.reel.map((f) => (Array.isArray(f) ? { c: f[0], cap: f[1], img: "" } : f))
       },
       team: Array.isArray(d.team) ? d.team : clone(D0.team),
+      form: Object.assign({}, window.CS.form, d.form || {}),
       about: {
         facts: d.about && Array.isArray(d.about.facts) ? d.about.facts : clone(D0.facts),
         timeline: d.about && Array.isArray(d.about.timeline) ? d.about.timeline : D0.timeline.map((t) => (Array.isArray(t) ? { y: t[0], h: t[1], p: t[2] } : t)),
@@ -268,6 +269,7 @@
     ["team", "Team", "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3.3 3-5 6-5s5.3 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17.5 15c2 .4 3.2 2 3.5 5"],
     ["clients", "Client logos", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
     ["contact", "Contact & social", "M21 3 3 10.5l7 2.5 2.5 7zM10 13l4-4"],
+    ["form", "Contact form", "M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"],
     ["seo", "SEO", "M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5 20 20"],
     ["layout", "Layout & brand", "M4 4h16v5H4zM4 12h7v8H4zM14 12h6v8h-6z"]
   ];
@@ -322,6 +324,7 @@
       else if (sec === "contact") await contact();
       else if (sec === "layout") await layout();
       else if (sec === "seo") await seoScreen();
+      else if (sec === "form") await formScreen();
       else await overview();
     } catch (err) { v.innerHTML = head("Something went wrong") + `<p class="note">${esc(friendly(err))}</p>`; console.error(err); }
     window.scrollTo(0, 0);
@@ -959,6 +962,37 @@
       };
     };
     draw();
+  }
+
+  /* ---------- Contact form ("Let's talk"): wording and answer options ---------- */
+  async function formScreen() {
+    const site = await api.getSite();
+    const f = site.form;
+    const T = (k, label, hint = "", long = false, max = 300) => `<label class="${long ? "wide" : ""}">${label}${hint ? ` <span class="muted">${hint}</span>` : ""}${long
+      ? `<textarea data-k="${k}" rows="2" maxlength="${max}">${esc(f[k] || "")}</textarea>` : `<input data-k="${k}" maxlength="${max}" value="${esc(f[k] || "")}">`}</label>`;
+    const O = (k, label, max) => `<label class="wide">${label} <span class="muted">(one per line, up to ${max})</span><textarea data-opts="${k}" rows="${Math.min(10, (f[k] || []).length + 1)}">${esc((f[k] || []).join("\n"))}</textarea></label>`;
+    view().innerHTML = head("Contact form", "The wording of the “Let's talk” chat and its answer options. The four steps stay the same so every lead fits the Leads screen.",
+      `${siteLink("start.html")}<button class="btn btn-brand" data-save>Save</button>`) + `
+      <div class="panel form-grid">${T("intro", "Welcome line", "", true)}</div>
+      <div class="panel form-grid"><h3 class="span">1 of 4 · What they need</h3>${T("q1", "Question", "", true)}${O("needs", "Options (visitors can pick several)", 10)}</div>
+      <div class="panel form-grid"><h3 class="span">2 of 4 · Who they are</h3>${T("q2", "Question", "", true)}
+        ${T("nameLabel", "Name field label")}${T("bizLabel", "Business field label")}${T("aboutLabel", "Optional note label")}${T("aboutPlaceholder", "Optional note example text")}</div>
+      <div class="panel form-grid"><h3 class="span">3 of 4 · Budget and timeline</h3>${T("q3", "Question", "({name} becomes their first name)", true)}
+        ${T("budgetLabel", "Budget label")}${O("budgets", "Budget options (visitors pick one)", 12)}
+        ${T("timelineLabel", "Timeline label")}${T("timelineHint", "Timeline hint", "(optional)")}${O("timelines", "Timeline options (visitors pick one)", 12)}</div>
+      <div class="panel form-grid"><h3 class="span">4 of 4 · How to reach them</h3>${T("q4", "Question", "", true)}${T("contactLabel", "Contact field label")}${T("contactPlaceholder", "Contact field example text")}${T("send", "Send button")}</div>
+      <p class="small muted">Answers already received keep the wording they were sent with. Options are limited to 80 characters each.</p>`;
+    $("[data-save]").onclick = async () => {
+      $$("[data-k]").forEach((el) => { f[el.dataset.k] = el.value.trim(); });
+      for (const el of $$("[data-opts]")) {
+        const k = el.dataset.opts, max = k === "needs" ? 10 : 12;
+        const list = el.value.split("\n").map((x) => x.trim().slice(0, 80)).filter(Boolean);
+        if (!list.length) return toast("Each list needs at least one option.", true);
+        if (list.length > max) return toast(`Keep it to ${max} options or fewer.`, true);
+        f[k] = list;
+      }
+      try { await api.saveSite(site); toast("Contact form saved."); formScreen(); } catch (err) { fail(err); }
+    };
   }
 
   /* ---------- SEO: search title + description per page ---------- */

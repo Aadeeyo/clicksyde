@@ -536,6 +536,7 @@
     const body = $(".convo-body");
     const bars = $$(".qbar i");
     const steps = ["need", "who", "budget", "reach"];
+    const F = D.form;
     const setBar = (n) => bars.forEach((b, i) => b.classList.toggle("on", i < n));
 
     const say = (html, qn) => { body.insertAdjacentHTML("beforeend", `<div class="bubble us">${qn ? `<span class="qn">${qn}</span>` : ""}${html}</div>`); };
@@ -546,7 +547,7 @@
 
     const render = (from) => {
       body.innerHTML = "";
-      say(`Welcome. Four short questions, about a minute.${pre ? ` We see you're interested in <b>${esc(pre.t)}</b>.` : ""}`);
+      say(`${esc(F.intro)}${pre ? ` We see you're interested in <b>${esc(pre.t)}</b>.` : ""}`);
       for (let i = 0; i < steps.length; i++) {
         if (i < from) { ask(i, true); continue; }
         ask(i, false); break;
@@ -557,9 +558,9 @@
     const ask = (i, answered) => {
       const s = steps[i];
       if (s === "need") {
-        say("What do you need help with? Pick as many as you like.", "1 of 4");
+        say(esc(F.q1), "1 of 4");
         if (answered) return reply(ans.need.join(", "), i);
-        const pane = answer(`<div class="opts">${Q.need.map((o) => `<button class="opt" aria-pressed="${ans.need.includes(o)}">${esc(o)}</button>`).join("")}</div>
+        const pane = answer(`<div class="opts">${F.needs.map((o) => `<button class="opt" aria-pressed="${ans.need.includes(o)}">${esc(o)}</button>`).join("")}</div>
           <div class="go-row"><span class="err"></span><button class="btn btn-dark" data-next>Next <span class="arr">→</span></button></div>`);
         $$(".opt", pane).forEach((b) => b.onclick = () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"));
         $("[data-next]", pane).onclick = () => {
@@ -569,12 +570,12 @@
         };
       }
       if (s === "who") {
-        say("Nice. Who are we talking to? Tell us about you and your business, like you'd text a friend.", "2 of 4");
+        say(esc(F.q2), "2 of 4");
         if (answered) return reply(`${ans.name}, ${ans.business}${ans.about ? ` · “${ans.about}”` : ""}`, i);
-        const pane = answer(`<div class="row2"><div class="field"><label for="f-name">Your name</label><input id="f-name" autocomplete="name" value="${esc(ans.name)}"></div>
-          <div class="field"><label for="f-biz">Business or brand</label><input id="f-biz" autocomplete="organization" value="${esc(ans.business)}"></div></div>
-          <div class="field"><label for="f-about">Anything we should know? <span class="muted">(optional, one line is fine)</span></label>
-          <textarea id="f-about" rows="2" placeholder="e.g. We sell skincare online and want to open a store in Abuja">${esc(ans.about)}</textarea></div>
+        const pane = answer(`<div class="row2"><div class="field"><label for="f-name">${esc(F.nameLabel)}</label><input id="f-name" autocomplete="name" value="${esc(ans.name)}"></div>
+          <div class="field"><label for="f-biz">${esc(F.bizLabel)}</label><input id="f-biz" autocomplete="organization" value="${esc(ans.business)}"></div></div>
+          <div class="field"><label for="f-about">${esc(F.aboutLabel)} <span class="muted">(optional, one line is fine)</span></label>
+          <textarea id="f-about" rows="2" placeholder="${esc(F.aboutPlaceholder)}">${esc(ans.about)}</textarea></div>
           <div class="go-row"><span class="err"></span><button class="btn btn-dark" data-next>Next <span class="arr">→</span></button></div>`);
         $("#f-name", pane).focus({ preventScroll: true });
         $("[data-next]", pane).onclick = () => {
@@ -584,12 +585,12 @@
         };
       }
       if (s === "budget") {
-        say(`Thanks, ${esc(ans.name.split(" ")[0])}! Roughly what budget and timeline are you working with? No wrong answers, it just helps us plan.`, "3 of 4");
+        say(esc(F.q3).replace(/\{name\}/g, esc(ans.name.split(" ")[0])), "3 of 4");
         if (answered) return reply(`${ans.budget} · ${ans.when}`, i);
-        const pane = answer(`<p class="opts-label" id="l-budget">Budget</p>
-          <div class="opts" data-g="budget" role="group" aria-labelledby="l-budget">${Q.budget.map((o) => `<button class="opt" aria-pressed="${ans.budget === o}">${esc(o)}</button>`).join("")}</div>
-          <p class="opts-label" id="l-when">Timeline <span class="muted">(when do you need this?)</span></p>
-          <div class="opts" data-g="when" role="group" aria-labelledby="l-when">${Q.when.map((o) => `<button class="opt" aria-pressed="${ans.when === o}">${esc(o)}</button>`).join("")}</div>
+        const pane = answer(`<p class="opts-label" id="l-budget">${esc(F.budgetLabel)}</p>
+          <div class="opts" data-g="budget" role="group" aria-labelledby="l-budget">${F.budgets.map((o) => `<button class="opt" aria-pressed="${ans.budget === o}">${esc(o)}</button>`).join("")}</div>
+          <p class="opts-label" id="l-when">${esc(F.timelineLabel)}${F.timelineHint ? ` <span class="muted">(${esc(F.timelineHint)})</span>` : ""}</p>
+          <div class="opts" data-g="when" role="group" aria-labelledby="l-when">${F.timelines.map((o) => `<button class="opt" aria-pressed="${ans.when === o}">${esc(o)}</button>`).join("")}</div>
           <div class="go-row"><span class="err"></span><button class="btn btn-dark" data-next>Next <span class="arr">→</span></button></div>`);
         $$(".opts", pane).forEach((g) => g.addEventListener("click", (e) => {
           const b = e.target.closest(".opt"); if (!b) return;
@@ -602,9 +603,9 @@
         };
       }
       if (s === "reach") {
-        say("Last one. Where can we reach you? We reply within one working day.", "4 of 4");
-        const pane = answer(`<div class="field"><label for="f-contact">Email or WhatsApp number</label><input id="f-contact" autocomplete="email" value="${esc(ans.contact)}" placeholder="you@brand.com or 0801 234 5678"></div>
-          <div class="go-row"><span class="err"></span><button class="btn btn-brand" data-next>Send it <span class="arr">→</span></button></div>`);
+        say(esc(F.q4), "4 of 4");
+        const pane = answer(`<div class="field"><label for="f-contact">${esc(F.contactLabel)}</label><input id="f-contact" autocomplete="email" value="${esc(ans.contact)}" placeholder="${esc(F.contactPlaceholder)}"></div>
+          <div class="go-row"><span class="err"></span><button class="btn btn-brand" data-next>${esc(F.send)} <span class="arr">→</span></button></div>`);
         $("[data-next]", pane).onclick = async () => {
           ans.contact = $("#f-contact", pane).value.trim();
           const okEmail = /^\S+@\S+\.\S+$/.test(ans.contact), okPhone = ans.contact.replace(/\D/g, "").length >= 10;

@@ -238,3 +238,6 @@
 .serp-desc { font-size: 14px; line-height: 1.5; color: #4d5156; }
 .seo-fields label { display: block !important; }
 .seo-fields label input, .seo-fields label textarea { margin-top: 6px; }
+
+.form-grid .span, .form-grid label.wide { grid-column: 1 / -1; }
+.form-grid h3 { margin: 0; }

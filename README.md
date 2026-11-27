@@ -57,6 +57,7 @@ The team manages day-to-day content at `/admin.html` (not linked from the site, 
 | Services | Add, edit, reorder and delete the sticky notes on the Services wall (name, one-liner, description, what you get, great for, note colour) and choose which problems in the problem finder each one fixes |
 | Case studies | Add, edit, reorder, publish/unpublish and delete the case studies on the Work page: client, headline, summary, tags and filter, slides (caption, big text, colour, image or video), results, the full story, the client testimonial and Clicksyde's reply |
 | Page copy | Edit the headlines, intros, buttons and section text of every page directly on the page: open a page from the admin, click any outlined text, type, save. "Original wording" restores a text; "Back to original" resets a whole page |
+| Contact form | Wording of the "Let's talk" chat (welcome line, the four questions, field labels and examples, Send button) and its answer options (needs, budgets, timelines). The four steps stay fixed so every lead fits the leads table |
 | SEO | Search title and description for each page, with a Google-style preview and character counts |
 | Media & spotlight | Upload or replace the hero reel video; edit the campaign frames behind the hero (caption, colour, optional still); switch on a Spotlight section on the home page featuring one campaign (image or video, title, text, button) |
 | About page | Add, edit, reorder and remove the fun-fact flip cards (question, answer, label), the "Our story" timeline (year, heading, text) and the values (icon, heading, text) |
@@ -80,7 +81,7 @@ What the admin saves is loaded by `js/content.js` on top of `js/data.js`. If the
 
 **Video uploads (live).** Run `supabase/migrations/20261127000000_clicksyde_media.sql` once so the media bucket accepts MP4/WebM up to 50 MB (the Supabase free plan's upload limit). In demo mode, uploaded media is kept in the browser (IndexedDB).
 
-Not in the admin yet (still edited in `js/data.js`): the wording of the problem-finder problems, the typed prompts after "Like what exactly?" on the About page, and the contact form questions.
+Not in the admin yet (still edited in `js/data.js`): the wording of the problem-finder problems, the typed prompts after "Like what exactly?" on the About page.
 
 ## To add before launch
 

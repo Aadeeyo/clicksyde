@@ -36,6 +36,8 @@ The original storybook (reel-wall hero, sticky-note wall, bottom dock), made sub
 
 In place: keyword-led titles and descriptions per page (editable in admin > SEO), canonical URLs, Open Graph / X share tags with `assets/share.jpg` (1200x630), Organization + ProfessionalService + WebSite structured data on the home page, `robots.txt`, `sitemap.xml`, a branded `404.html`, alt text on content images, and `noindex` on demo, edit and preview links. URLs assume the site runs at `https://clicksyde.com/` with `.html` addresses: if the host serves clean URLs (`/services`), update the canonical tags and `sitemap.xml` to match, and update `<lastmod>` when pages change.
 
+**Google Search Console.** `google594a04185ccaba3f.html` in the site root is Google's ownership file. Keep it there, unchanged, after launch; deleting it un-verifies the site.
+
 Still to do (see the SEO plan): pre-rendering and separate pages for articles, case studies and key services; Google Search Console; Google Business Profile; directory listings; analytics with conversion events; 301 redirects from the current clicksyde.com pages at launch.
 
 **Luxe finish.** Admin > Layout & brand > Finish switches between Standard and Luxe (add `?luxe=1` or `?luxe=0` to any page to preview either without saving). Luxe keeps the design and adds: calmer spacing, word-by-word headline reveals, images that unveil on scroll, a fine film grain, an espresso and sand palette with orange as the accent, serif numerals, refined buttons, and a short branded intro once per visit. Reduced-motion visitors and edit mode get the colours without the motion. Styles live in the "LUXE FINISH" block of `css/clicksyde.css`; motion in `luxeFinish()` in `js/app.js`.

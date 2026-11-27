@@ -143,7 +143,7 @@
       if (site.theme && isHex(site.theme.brand)) D.theme = { brand: site.theme.brand };
       if (["s", "m", "l", "xl"].includes(site.logoSize)) D.logoSize = site.logoSize;
       if (site.finish === "luxe" || site.finish === "standard") D.finish = site.finish;
-      if (site.analytics && /^G-[A-Z0-9]{4,14}$/.test(site.analytics.ga4 || "")) D.analytics = { ga4: site.analytics.ga4 };
+      if (site.analytics && (site.analytics.ga4 === "" || /^(G|GTM)-[A-Z0-9]{4,14}$/.test(site.analytics.ga4 || ""))) D.analytics = { ga4: site.analytics.ga4 }; // "" = switched off in the admin
       if (site.seo && typeof site.seo === "object") {
         D.seo = {};
         Object.keys(site.seo).forEach((k) => {

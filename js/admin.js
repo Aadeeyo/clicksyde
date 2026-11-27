@@ -81,7 +81,7 @@
       logoSize: ["s", "m", "l", "xl"].includes(d.logoSize) ? d.logoSize : "m",
       seo: d.seo && typeof d.seo === "object" ? d.seo : {},
       seoItems: d.seoItems && typeof d.seoItems === "object" ? d.seoItems : {},
-      analytics: { ga4: (d.analytics && d.analytics.ga4) || "" },
+      analytics: { ga4: d.analytics && typeof d.analytics.ga4 === "string" ? d.analytics.ga4 : ((window.CS.analytics || {}).ga4 || "") },
       finish: d.finish === "luxe" ? "luxe" : "standard",
       postsManaged: !!d.postsManaged
     };
@@ -1079,8 +1079,8 @@
           ${seo[id] ? `<button class="linkish" data-reset>Back to the original</button>` : ""}</div>
         <div class="serp"><span class="serp-url">clicksyde.com${path ? " › " + esc(path.replace(".html", "")) : ""}</span><span class="serp-title"></span><span class="serp-desc"></span></div></li>`).join("")}</ul>
       <div class="panel"><h3>Analytics</h3>
-        <p class="small muted" style="margin:0">Paste your Google Analytics 4 measurement ID (it starts with G-). Visitors are asked for consent first; analytics only loads if they accept. Tracked: page views, completed “Let's talk” forms (generate_lead), newsletter sign-ups (sign_up), email/WhatsApp/phone clicks (contact_click) and “Let's talk” button clicks (cta_click).</p>
-        <label>GA4 measurement ID<input data-ga4 placeholder="G-XXXXXXXXXX" value="${esc(site.analytics.ga4)}" maxlength="20" style="max-width:260px"></label></div>
+        <p class="small muted" style="margin:0">Paste your Google Tag Manager container ID (GTM-…) or a Google Analytics 4 measurement ID (G-…). Visitors are asked for consent first; analytics only loads if they accept. Tracked: page views, completed “Let's talk” forms (generate_lead), newsletter sign-ups (sign_up), email/WhatsApp/phone clicks (contact_click) and “Let's talk” button clicks (cta_click).</p>
+        <label>Tag Manager or GA4 ID<input data-ga4 placeholder="GTM-XXXXXXX or G-XXXXXXXXXX" value="${esc(site.analytics.ga4)}" maxlength="20" style="max-width:260px"></label></div>
       <div class="panel"><h3>Also in place</h3><p class="small muted" style="margin:0">Share previews (image, title and description) for WhatsApp, LinkedIn and X, a sitemap for Google, business details for search results, and hidden demo and edit links. After launch, add the site to Google Search Console and submit <code>clicksyde.com/sitemap.xml</code>.</p></div>`;
     const sync = (li) => {
       const t = $("[data-k=title]", li).value, d = $("[data-k=description]", li).value;
@@ -1098,7 +1098,7 @@
     });
     $("[data-save]").onclick = async () => {
       const ga = $("[data-ga4]").value.trim().toUpperCase();
-      if (ga && !/^G-[A-Z0-9]{4,14}$/.test(ga)) return toast("That doesn't look like a GA4 measurement ID (G-XXXXXXXXXX).", true);
+      if (ga && !/^(G|GTM)-[A-Z0-9]{4,14}$/.test(ga)) return toast("That doesn't look like a GA4 ID (G-XXXXXXXXXX) or a Tag Manager ID (GTM-XXXXXXX).", true);
       site.analytics = { ga4: ga };
       $$("li[data-p]").forEach((li) => {
         const id = li.dataset.p, t = $("[data-k=title]", li).value.trim(), d = $("[data-k=description]", li).value.trim();

@@ -21,18 +21,32 @@
   });
 
   /* ---------- Analytics (GA4) with consent, and conversion events ---------- */
-  const track = (name, params) => { try { if (window.gtag) window.gtag("event", name, params || {}); } catch (_) {} };
+  // Works with a GA4 ID (G-…) or a Tag Manager container (GTM-…). With Tag Manager, events reach the dataLayer
+  // as { event: name, ...params } so GTM triggers ("Custom Event") can pick them up.
+  let tagMode = "";
+  const track = (name, params) => { try {
+    if (tagMode === "gtm") window.dataLayer.push(Object.assign({ event: name }, params || {}));
+    else if (tagMode === "ga4" && window.gtag) window.gtag("event", name, params || {});
+  } catch (_) {} };
   window.CStrack = track;
-  const gaId = D.analytics && /^G-[A-Z0-9]{4,14}$/.test(D.analytics.ga4 || "") ? D.analytics.ga4 : "";
+  const gaId = D.analytics && /^(G|GTM)-[A-Z0-9]{4,14}$/.test(D.analytics.ga4 || "") ? D.analytics.ga4 : "";
   const qs0 = new URLSearchParams(location.search);
   const analyticsOn = gaId && !D.demo && !qs0.has("edit") && page !== "admin";
   const loadGA = () => {
-    if (window.gtag || !analyticsOn) return;
+    if (tagMode || !analyticsOn) return;
     window.dataLayer = window.dataLayer || [];
     window.gtag = function () { window.dataLayer.push(arguments); };
-    window.gtag("js", new Date());
-    window.gtag("config", gaId, { anonymize_ip: true });
-    const s = document.createElement("script"); s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(gaId);
+    const s = document.createElement("script"); s.async = true;
+    if (/^GTM-/.test(gaId)) {
+      tagMode = "gtm";
+      window.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
+      s.src = "https://www.googletagmanager.com/gtm.js?id=" + encodeURIComponent(gaId);
+    } else {
+      tagMode = "ga4";
+      window.gtag("js", new Date());
+      window.gtag("config", gaId, { anonymize_ip: true });
+      s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(gaId);
+    }
     document.head.appendChild(s);
   };
   const consentBanner = () => {

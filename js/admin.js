@@ -576,7 +576,17 @@
               <button class="icon-btn" data-down="${i}" aria-label="Move ${esc(s.t)} down" ${i === list.length - 1 ? "disabled" : ""}>↓</button>
               <button class="icon-btn danger" data-rm="${i}" aria-label="Delete ${esc(s.t)}" ${list.length === 1 ? "disabled" : ""}>✕</button></div></li>`;
         }).join("")}</ul>
-        <p class="small muted">Reordering and deleting save straight away.</p>`;
+        <p class="small muted">Reordering and deleting save straight away.</p>
+        <div class="panel" data-problems><div class="row" style="justify-content:space-between"><div><h2>Problem finder</h2>
+          <p class="small muted" style="margin:4px 0 0">The “Start with the problem” list and the filter buttons above the wall. Picking a problem lights up the services ticked here.</p></div>
+          <button class="btn btn-brand" data-save-problems>Save problem finder</button></div>
+          <ul class="rows">${site.problems.map((pr, i) => `<li data-pi="${i}" style="align-items:flex-start">
+            <label class="grow wide">Problem <span class="muted">(how a visitor would say it)</span><input data-k="p" maxlength="120" value="${esc(pr.p)}" placeholder="e.g. Nobody knows we exist"></label>
+            <label style="width:180px">Filter label<input data-k="h" maxlength="40" value="${esc(pr.h)}" placeholder="e.g. Awareness"></label>
+            <div class="grow wide"><span class="small" style="font-weight:600;color:var(--ink-2)">Lights up</span>
+              <div class="chips" style="margin-top:6px">${list.map((sv) => `<button type="button" class="chip" data-sid="${esc(sv.id)}" aria-pressed="${pr.ids.includes(sv.id)}">${esc(sv.t)}</button>`).join("")}</div></div>
+            <div class="moves"><button class="icon-btn" data-pup ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button><button class="icon-btn" data-pdown ${i === site.problems.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button><button class="icon-btn danger" data-prm aria-label="Remove problem">✕</button></div></li>`).join("")}</ul>
+          ${site.problems.length < 10 ? `<button class="btn btn-light" data-padd>+ Add a problem</button>` : ""}</div>`;
       $$("[data-up]").forEach((b) => (b.onclick = () => { const i = +b.dataset.up; [list[i - 1], list[i]] = [list[i], list[i - 1]]; save("Order saved."); }));
       $$("[data-down]").forEach((b) => (b.onclick = () => { const i = +b.dataset.down; [list[i + 1], list[i]] = [list[i], list[i + 1]]; save("Order saved."); }));
       $$("[data-rm]").forEach((b) => (b.onclick = () => {
@@ -586,6 +596,29 @@
         site.problems.forEach((p) => { p.ids = p.ids.filter((x) => x !== s.id); });
         save("Service deleted.");
       }));
+      // problem finder
+      const probs = site.problems;
+      const readProbs = () => $$("[data-pi]").forEach((li) => {
+        const pr = probs[+li.dataset.pi];
+        pr.p = $("[data-k=p]", li).value; pr.h = $("[data-k=h]", li).value;
+        pr.ids = $$(".chip[aria-pressed=true]", li).map((c) => c.dataset.sid);
+      });
+      $$("[data-pi] .chip").forEach((c) => (c.onclick = () => c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") !== "true")));
+      $$("[data-pi]").forEach((li) => {
+        const i = +li.dataset.pi;
+        $("[data-pup]", li).onclick = () => { readProbs(); [probs[i - 1], probs[i]] = [probs[i], probs[i - 1]]; draw(); };
+        $("[data-pdown]", li).onclick = () => { readProbs(); [probs[i + 1], probs[i]] = [probs[i], probs[i + 1]]; draw(); };
+        $("[data-prm]", li).onclick = () => { readProbs(); probs.splice(i, 1); draw(); };
+      });
+      const padd = $("[data-padd]");
+      if (padd) padd.onclick = () => { readProbs(); probs.push({ p: "", h: "", ids: [] }); draw(); $$("[data-pi] [data-k=p]").pop().focus(); };
+      $("[data-save-problems]").onclick = async () => {
+        readProbs();
+        const clean = probs.map((pr) => ({ p: pr.p.trim(), h: pr.h.trim(), ids: pr.ids })).filter((pr) => pr.p);
+        if (clean.some((pr) => !pr.h)) return toast("Give every problem a short filter label.", true);
+        site.problems = clean;
+        try { await api.saveSite(site); toast("Problem finder saved."); services(); } catch (err) { fail(err); }
+      };
     };
     draw();
   }

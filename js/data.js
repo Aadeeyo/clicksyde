@@ -26,7 +26,7 @@ window.CS = {
     { id: "work",     href: "work.html",     title: "Work",         label: "Work",     stage: "Trust",      q: "Can you actually deliver?" },
     { id: "insights", href: "insights.html", title: "Insights",     label: "Insights", stage: "Grow",       q: "What do you know that I don't?" },
     { id: "about",    href: "about.html",    title: "About",        label: "About",  stage: "Connect",    q: "Who are the people behind this?" },
-    { id: "talk",     href: "start.html",    title: "Contact",      label: "Contact", stage: "Convert",  q: "How do we start?" }
+    { id: "talk",     href: "start.html#talk",    title: "Contact",      label: "Contact", stage: "Convert",  q: "How do we start?" }
   ],
 
   /* Home page sections, in order. The admin panel can reorder and hide them (hero always comes first). */

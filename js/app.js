@@ -62,7 +62,7 @@
   header.innerHTML = `
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Clicksyde home">${logo()}</a>
-      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html"><span class="dot"></span>Let's talk</a>` : `<span class="header-cta"></span>`}
+      ${page !== "talk" ? `<a class="btn btn-dark header-cta" href="start.html#talk"><span class="dot"></span>Let's talk</a>` : `<span class="header-cta"></span>`}
       <button class="menu-btn" aria-label="Open the story menu" aria-expanded="false" aria-controls="story-menu"><span></span></button>
     </div>
     <div class="progress" aria-hidden="true"></div>`;
@@ -80,7 +80,7 @@
         <span class="q">${esc(c.q)}</span></a></li>`).join("")}
     </ol>
     <div class="menu-foot">
-      <a class="btn btn-brand" href="start.html">Let's talk <span class="arr">→</span></a>
+      <a class="btn btn-brand" href="start.html#talk">Let's talk <span class="arr">→</span></a>
       <a class="btn btn-ghost" href="mailto:${D.contact.email}">${D.contact.email}</a>
     </div>`;
   document.body.appendChild(menu);
@@ -127,7 +127,7 @@
         <p class="muted" style="max-width:32ch;margin-top:14px">We make brands impossible to overlook.</p></div>
       <div><h4>Explore</h4><ul>${chapters.map((c) => `<li><a href="${c.href}">${esc(c.title)}</a></li>`).join("")}</ul></div>
       <div><h4>Start</h4><ul>
-        <li><a href="start.html">Request a proposal</a></li>
+        <li><a href="start.html#talk">Request a proposal</a></li>
         <li><a href="mailto:${D.contact.email}">${D.contact.email}</a></li></ul></div>
       <div><h4>Follow</h4><ul>
         ${[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["x", "X"], ["tiktok", "TikTok"]].map(([k, t]) =>
@@ -306,7 +306,7 @@
         <p class="body">${esc(s.body)}</p>
         <h4>What you get</h4><ul>${s.get.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>
         <h4>Great for</h4><div class="tags">${s.for.map((g) => `<span>${esc(g)}</span>`).join("")}</div>
-        <div class="acts"><a class="btn btn-dark" href="start.html?service=${s.id}">I need this <span class="arr">→</span></a>
+        <div class="acts"><a class="btn btn-dark" href="start.html?service=${s.id}#talk">I need this <span class="arr">→</span></a>
           <a class="btn btn-ghost" href="work.html">See it in action</a></div>
         <div class="nav"><button data-go="-1">← Previous note</button><button data-go="1">Next note →</button></div>`;
       $(".x", sheet).onclick = hide;
@@ -354,7 +354,7 @@
     const initials = (name) => esc(String(name || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase());
     if (!D.cases.length) {
       $(".jump").innerHTML = ""; $(".feed-filters").innerHTML = "";
-      $(".feed").innerHTML = `<p class="lead">New case studies are on the way. <a href="start.html">Start a project</a> and you could be next.</p>`;
+      $(".feed").innerHTML = `<p class="lead">New case studies are on the way. <a href="start.html#talk">Start a project</a> and you could be next.</p>`;
       return;
     }
     $(".jump").innerHTML = D.cases.map((c) => `
@@ -397,7 +397,7 @@
             <div class="av">${mark()}</div>
             <div><div class="who"><b>Clicksyde</b><span class="role">Replying</span></div><p class="said">${esc(c.reply)}</p></div>
           </div>` : ""}
-          <div class="add-comment"><a href="start.html">Want a comment like this? Start your project →</a></div>
+          <div class="add-comment"><a href="start.html#talk">Want a comment like this? Start your project →</a></div>
         </div>` : ""}
       </article>`).join("");
 
@@ -459,7 +459,7 @@
         t === "h" ? `<h2>${esc(x)}</h2>` : t === "q" ? `<blockquote>${esc(x)}</blockquote>` : `<p>${esc(x)}</p>`).join("") +
         `<div class="end"><h3 style="font-size:28px">Want this kind of thinking on your brand?</h3>
           <p>Get the next one in your inbox, or let's talk about your business.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-brand" href="start.html">Let's talk →</a><a class="btn btn-light" href="#newsletter" data-close>Join the newsletter</a></div></div>`;
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-brand" href="start.html#talk">Let's talk →</a><a class="btn btn-light" href="#newsletter" data-close>Join the newsletter</a></div></div>`;
       reader.classList.add("open"); reader.scrollTop = 0; document.body.style.overflow = "hidden";
       history.replaceState(null, "", "#" + p.id);
       $(".bar button", reader).focus();
@@ -545,6 +545,7 @@
     };
     const scroll = () => { const last = body.lastElementChild; if (last && last.getBoundingClientRect().bottom > innerHeight - 110) last.scrollIntoView({ behavior: "smooth", block: "center" }); };
 
+    let quiet = false; // true while the form first appears: no jumping down the page
     const render = (from) => {
       body.innerHTML = "";
       say(`${esc(F.intro)}${pre ? ` We see you're interested in <b>${esc(pre.t)}</b>.` : ""}`);
@@ -619,7 +620,7 @@
           done(saved);
         };
       }
-      scroll();
+      if (!quiet) scroll();
     };
 
     const answer = (html) => { body.insertAdjacentHTML("beforeend", `<div class="answer">${html}</div>`); return body.lastElementChild; };
@@ -643,7 +644,7 @@
     };
 
     body.addEventListener("click", (e) => { const b = e.target.closest("[data-edit]"); if (b && !$(".done-card", body)) render(Number(b.dataset.edit)); });
-    render(0);
+    quiet = true; render(0); quiet = false;
   };
 
   /* Saves a row to the Clicksyde Supabase project (tables in supabase/migrations).

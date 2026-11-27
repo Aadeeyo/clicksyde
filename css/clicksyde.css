@@ -883,6 +883,9 @@ html.luxe .member:hover .ph img, html.luxe .spot-media:hover img { transform: sc
 .lx-intro.out { clip-path: inset(0 0 100% 0); }
 @media (prefers-reduced-motion: reduce) { .lx-intro { display: none; } }
 
+/* Let's talk links land on the form card, clear of the sticky header */
+#talk { scroll-margin-top: 92px; }
+
 /* ---------- Content managed in the admin panel ---------- */
 [hidden] { display: none !important; }
 .featured .art, .post .art { position: relative; overflow: hidden; }
